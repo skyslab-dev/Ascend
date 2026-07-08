@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ascend</title>
-  <link rel="stylesheet" href="styles.css?v=20260707-3">
+  <link rel="stylesheet" href="styles.css?v=20260708-1">
 </head>
 <body>
   <main class="game-shell" id="gameShell" aria-label="Ascend game">
@@ -162,18 +162,21 @@
         <span class="game-over-label">Journey Ended</span>
         <strong class="final-altitude" id="finalAltitude">0</strong>
         <span class="personal-best">Personal best · <strong id="bestAltitude">0</strong></span>
+        <section class="player-name-prompt hidden" id="playerNamePrompt" aria-label="Choose player name">
+          <strong>Top 10</strong>
+          <span>Enter a leaderboard name</span>
+          <input id="playerNameInput" maxlength="18" autocomplete="off" aria-label="Leaderboard name" placeholder="Your name">
+          <div class="player-name-actions">
+            <button id="playerNameConfirm" type="button">Submit</button>
+            <button id="playerNameSkip" type="button">Skip</button>
+          </div>
+          <small id="playerNameStatus" aria-live="polite"></small>
+        </section>
         <div class="game-over-actions">
           <button id="centerRestart" type="button">Restart</button>
           <button id="returnToTitle" type="button">Main Menu</button>
         </div>
       </div>
-    </section>
-    <section class="player-name-prompt hidden" id="playerNamePrompt" aria-label="Choose player name">
-      <strong>Leaderboard Score</strong>
-      <span>Enter a name for your top-10 run</span>
-      <input id="playerNameInput" maxlength="18" autocomplete="nickname" aria-label="Leaderboard name" placeholder="Your name">
-      <button id="playerNameConfirm" type="button">Continue</button>
-      <small id="playerNameStatus" aria-live="polite"></small>
     </section>
     <aside class="advancement-popup hidden" id="advancementPopup" aria-live="polite">
       <span>Advancement complete</span>
@@ -260,6 +263,6 @@
     </section>
   </main>
   <script src="leaderboard-config.js"></script>
-  <script src="game.js?v=20260708-3"></script>
+  <script src="game.js?v=20260708-4"></script>
 </body>
 </html>

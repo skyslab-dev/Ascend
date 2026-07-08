@@ -122,6 +122,7 @@ const titleLeaderboardPersonal = document.getElementById("titleLeaderboardPerson
 const playerNamePrompt = document.getElementById("playerNamePrompt");
 const playerNameInput = document.getElementById("playerNameInput");
 const playerNameConfirm = document.getElementById("playerNameConfirm");
+const playerNameSkip = document.getElementById("playerNameSkip");
 const playerNameStatus = document.getElementById("playerNameStatus");
 const advancementPopup = document.getElementById("advancementPopup");
 const advancementPopupTitle = document.getElementById("advancementPopupTitle");
@@ -458,6 +459,7 @@ function resize() {
 }
 
 function resetRun() {
+  finalizePendingLeaderboardEntry();
   closeMenu(false);
   stopAnimationLoop();
   releaseActivePointer();
@@ -1222,6 +1224,20 @@ function setPilotName(value) {
   return name;
 }
 
+function getNextAnonymousName() {
+  let sequence = 0;
+  try {
+    const savedSequence = Number(window.localStorage?.getItem("ascend-anonymous-sequence"));
+    if (Number.isSafeInteger(savedSequence) && savedSequence >= 0) {
+      sequence = savedSequence;
+    }
+    window.localStorage?.setItem("ascend-anonymous-sequence", String(sequence + 1));
+  } catch {
+    // The in-memory fallback remains deterministic for this submission.
+  }
+  return `Pilot${sequence}`;
+}
+
 function uniqueTopScores(scores, metricKey = "score") {
   const sortedScores = [...scores].sort((a, b) => Number(b[metricKey]) - Number(a[metricKey]));
   const names = new Set();
@@ -1332,11 +1348,11 @@ async function loadLeaderboard(list, status, personal) {
   }
 }
 
-async function submitLeaderboardScore(score, height, totalLights) {
+async function submitLeaderboardScore(score, height, totalLights, playerName = getPilotName()) {
   const config = getLeaderboardConfig();
-  const name = getPilotName();
+  const name = normalizePilotName(playerName);
   const record = { player_name: name, score: Math.floor(score), height: Math.floor(height), total_lights: Math.floor(totalLights) };
-  if (!name || record.score <= 0) return false;
+  if (!name || record.score < 0) return false;
   const localScores = loadLocalLeaderboard();
   localScores.push(record);
   saveLocalLeaderboard(localScores);
@@ -1380,15 +1396,19 @@ async function runQualifiesForLeaderboard(record) {
 
 async function offerLeaderboardEntry(score, height, totalLights) {
   const record = { score: Math.floor(score), height: Math.floor(height), total_lights: Math.floor(totalLights) };
-  if (record.score <= 0 || !await runQualifiesForLeaderboard(record)) return;
-  pendingLeaderboardRecord = record;
-  showPlayerNamePrompt();
+  if (record.score < 0) return;
+  const qualifies = await runQualifiesForLeaderboard(record);
+  if (qualifies && state.gameOver) {
+    pendingLeaderboardRecord = record;
+    showPlayerNamePrompt();
+    return;
+  }
+  submitLeaderboardScore(record.score, record.height, record.total_lights, getNextAnonymousName());
 }
 
 function showPlayerNamePrompt(nextAction = null) {
   pendingPlayerNameAction = nextAction;
-  const savedName = getPilotName();
-  playerNameInput.value = savedName === "Pilot" ? "" : savedName;
+  playerNameInput.value = "";
   playerNameStatus.textContent = "";
   playerNamePrompt.classList.remove("hidden");
 }
@@ -1404,12 +1424,44 @@ function confirmPlayerName() {
   if (pendingLeaderboardRecord) {
     const record = pendingLeaderboardRecord;
     pendingLeaderboardRecord = null;
-    submitLeaderboardScore(record.score, record.height, record.total_lights);
+    submitLeaderboardScore(record.score, record.height, record.total_lights, name);
   }
   const nextAction = pendingPlayerNameAction;
   pendingPlayerNameAction = null;
   nextAction?.();
   return true;
+}
+
+function skipPlayerName() {
+  if (!pendingLeaderboardRecord) {
+    playerNamePrompt.classList.add("hidden");
+    return false;
+  }
+  const record = pendingLeaderboardRecord;
+  pendingLeaderboardRecord = null;
+  playerNamePrompt.classList.add("hidden");
+  playerNameInput.value = "";
+  playerNameStatus.textContent = "";
+  submitLeaderboardScore(
+    record.score,
+    record.height,
+    record.total_lights,
+    getNextAnonymousName()
+  );
+  const nextAction = pendingPlayerNameAction;
+  pendingPlayerNameAction = null;
+  nextAction?.();
+  return true;
+}
+
+function finalizePendingLeaderboardEntry() {
+  if (pendingLeaderboardRecord) {
+    skipPlayerName();
+  } else {
+    playerNamePrompt.classList.add("hidden");
+    playerNameInput.value = "";
+    playerNameStatus.textContent = "";
+  }
 }
 
 async function showPauseLeaderboard() {
@@ -4125,6 +4177,7 @@ titleLeaderboardBack.addEventListener("click", showTitleMenu);
 titleLeaderboardLeft.addEventListener("click", () => shiftLeaderboard(-1, "title"));
 titleLeaderboardRight.addEventListener("click", () => shiftLeaderboard(1, "title"));
 playerNameConfirm.addEventListener("click", confirmPlayerName);
+playerNameSkip.addEventListener("click", skipPlayerName);
 playerNameInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") confirmPlayerName();
 });

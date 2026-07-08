@@ -218,6 +218,7 @@ const elements = {
   playerNamePrompt: makeElement(),
   playerNameInput: makeElement(),
   playerNameConfirm: makeElement(),
+  playerNameSkip: makeElement(),
   playerNameStatus: makeElement(),
   advancementPopup: makeElement(),
   advancementPopupTitle: makeElement(),
@@ -998,5 +999,18 @@ assert.equal(state.launched, true);
 assert.equal(state.lastFlightX, 0);
 assert.equal(state.lastFlightY, -1);
 assert.equal(state.pointerInside, false);
+
+storedValues.delete("ascend-anonymous-sequence");
+assert.equal(run("getNextAnonymousName()"), "Pilot0");
+assert.equal(run("getNextAnonymousName()"), "Pilot1");
+storedValues.set("ascend-anonymous-sequence", "0");
+run("pendingLeaderboardRecord = { score: 42, height: 3, total_lights: 1 }");
+run("showPlayerNamePrompt()");
+assert.equal(elements.playerNameInput.value, "");
+assert.equal(run("skipPlayerName()"), true);
+const anonymousScores = JSON.parse(storedValues.get("ascend-leaderboard"));
+assert.equal(anonymousScores.at(-1).player_name, "Pilot0");
+assert.equal(anonymousScores.at(-1).score, 42);
+assert.equal(elements.playerNamePrompt.classList.contains("hidden"), true);
 
 console.log("game tests passed");
