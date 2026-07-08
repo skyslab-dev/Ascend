@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{entry} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'player_name', 'score', 'height', 'total_lights', 'created_at'
+        ]) &&
+        request.resource.data.player_name is string &&
+        request.resource.data.player_name.size() >= 1 &&
+        request.resource.data.player_name.size() <= 18 &&
+        request.resource.data.score is int &&
+        request.resource.data.score > 0 &&
+        request.resource.data.score <= 10000000000 &&
+        request.resource.data.height is int &&
+        request.resource.data.height >= 0 &&
+        request.resource.data.height <= 1000000000 &&
+        request.resource.data.total_lights is int &&
+        request.resource.data.total_lights >= 0 &&
+        request.resource.data.total_lights <= 1000000000 &&
+        request.resource.data.created_at is timestamp;
+      allow update, delete: if false;
+    }
+  }
+}

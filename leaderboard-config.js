@@ -1,4 +1,4 @@
 window.ASCEND_LEADERBOARD = {
-  supabaseUrl: "",
-  anonKey: ""
+  firebaseProjectId: "",
+  firebaseApiKey: ""
 };

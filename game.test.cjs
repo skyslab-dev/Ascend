@@ -279,6 +279,26 @@ vm.runInContext(fs.readFileSync("game.js", "utf8"), sandbox);
 const run = (code) => vm.runInContext(code, sandbox);
 const state = run("state");
 
+run('window.ASCEND_LEADERBOARD = { firebaseProjectId: "ascend-test", firebaseApiKey: "test-key" }');
+assert.deepEqual(
+  JSON.parse(JSON.stringify(run("getLeaderboardConfig()"))),
+  {
+    url: "https://firestore.googleapis.com/v1/projects/ascend-test/databases/(default)/documents",
+    key: "test-key"
+  }
+);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(run(`decodeFirestoreScore(${JSON.stringify({
+    fields: {
+      player_name: { stringValue: "Sky" },
+      score: { integerValue: "1200" },
+      height: { integerValue: "80" },
+      total_lights: { integerValue: "7" }
+    }
+  })})`))),
+  { player_name: "Sky", score: 1200, height: 80, total_lights: 7 }
+);
+
 assert.equal(state.lives, 3);
 assert.equal(elements.lives.children.length, 3);
 assert.equal(elements.altitude.textContent, "0 km");

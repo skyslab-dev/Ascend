@@ -1151,11 +1151,53 @@ function showAdvancementsPanel() {
 
 function getLeaderboardConfig() {
   const config = window.ASCEND_LEADERBOARD;
-  if (!config?.supabaseUrl || !config?.anonKey) return null;
+  if (!config?.firebaseProjectId || !config?.firebaseApiKey) return null;
   return {
-    url: config.supabaseUrl.replace(/\/$/, ""),
-    key: config.anonKey
+    url: `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(config.firebaseProjectId)}/databases/(default)/documents`,
+    key: config.firebaseApiKey
   };
+}
+
+function decodeFirestoreScore(document) {
+  const fields = document?.fields;
+  if (!fields) return null;
+  const playerName = fields.player_name?.stringValue;
+  if (typeof playerName !== "string") return null;
+  return {
+    player_name: playerName,
+    score: Number(fields.score?.integerValue || 0),
+    height: Number(fields.height?.integerValue || 0),
+    total_lights: Number(fields.total_lights?.integerValue || 0)
+  };
+}
+
+function encodeFirestoreScore(record) {
+  return {
+    fields: {
+      player_name: { stringValue: record.player_name },
+      score: { integerValue: String(record.score) },
+      height: { integerValue: String(record.height) },
+      total_lights: { integerValue: String(record.total_lights) },
+      created_at: { timestampValue: new Date().toISOString() }
+    }
+  };
+}
+
+async function fetchCloudScores(config, metricKey, limit = 100) {
+  const response = await fetch(`${config.url}:runQuery?key=${encodeURIComponent(config.key)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "leaderboard" }],
+        orderBy: [{ field: { fieldPath: metricKey }, direction: "DESCENDING" }],
+        limit
+      }
+    })
+  });
+  if (!response.ok) throw new Error("Leaderboard request failed");
+  const rows = await response.json();
+  return rows.map((row) => decodeFirestoreScore(row.document)).filter(Boolean);
 }
 
 function getPilotName() {
@@ -1245,17 +1287,8 @@ async function renderPreviousRun(element, metric, localScores, config) {
   let rank = 1 + localScores.filter((entry) => Number(entry[metric.key]) > Number(run[metric.key])).length;
   if (config) {
     try {
-      const response = await fetch(`${config.url}/rest/v1/leaderboard?select=id&${metric.key}=gt.${encodeURIComponent(run[metric.key])}`, {
-        headers: {
-          apikey: config.key,
-          Authorization: `Bearer ${config.key}`,
-          Prefer: "count=exact",
-          Range: "0-0"
-        }
-      });
-      const range = response.headers.get("content-range") ?? "";
-      const count = Number(range.split("/")[1]);
-      if (response.ok && Number.isInteger(count)) rank = count + 1;
+      const cloudScores = await fetchCloudScores(config, metric.key, 1000);
+      rank = 1 + cloudScores.filter((entry) => Number(entry[metric.key]) > Number(run[metric.key])).length;
     } catch {
       // The local rank remains useful while cloud ranking is unavailable.
     }
@@ -1284,11 +1317,7 @@ async function loadLeaderboard(list, status, personal) {
   }
   status.textContent = "Loading";
   try {
-    const response = await fetch(`${config.url}/rest/v1/leaderboard?select=player_name,score,height,total_lights&order=${metric.key}.desc,created_at.asc&limit=100`, {
-      headers: { apikey: config.key, Authorization: `Bearer ${config.key}` }
-    });
-    if (!response.ok) throw new Error("Leaderboard request failed");
-    const cloudScores = await response.json();
+    const cloudScores = await fetchCloudScores(config, metric.key);
     const scores = uniqueTopScores([...cloudScores, ...localScores], metric.key);
     renderLeaderboard(list, scores, metric);
     await renderPreviousRun(personal, metric, localScores, config);
@@ -1318,15 +1347,10 @@ async function submitLeaderboardScore(score, height, totalLights) {
   }
   if (!config) return true;
   try {
-    const response = await fetch(`${config.url}/rest/v1/leaderboard`, {
+    const response = await fetch(`${config.url}/leaderboard?key=${encodeURIComponent(config.key)}`, {
       method: "POST",
-      headers: {
-        apikey: config.key,
-        Authorization: `Bearer ${config.key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      },
-      body: JSON.stringify(record)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(encodeFirestoreScore(record))
     });
     if (!response.ok) throw new Error("Leaderboard submission failed");
     return true;
@@ -1341,13 +1365,8 @@ async function runQualifiesForLeaderboard(record) {
   const cloudScores = [];
   if (config) {
     try {
-      const responses = await Promise.all(leaderboardMetrics.map((metric) => fetch(
-        `${config.url}/rest/v1/leaderboard?select=player_name,score,height,total_lights&order=${metric.key}.desc,created_at.asc&limit=10`,
-        { headers: { apikey: config.key, Authorization: `Bearer ${config.key}` } }
-      )));
-      for (const response of responses) {
-        if (response.ok) cloudScores.push(...await response.json());
-      }
+      const results = await Promise.all(leaderboardMetrics.map((metric) => fetchCloudScores(config, metric.key, 10)));
+      results.forEach((scores) => cloudScores.push(...scores));
     } catch {
       // Local scores still provide offline qualification.
     }
