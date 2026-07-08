@@ -991,4 +991,12 @@ assert.equal(storedValues.has("ascend-advancements"), false);
 assert.equal(JSON.stringify(state.advancementProgress), JSON.stringify({ lifetimeLights: 0, survivedHits: 0, completed: [] }));
 assert.equal(state.titleScreenVisible, false);
 
+const launchButtonY = state.launchButton.y;
+listeners.pointerdown({ clientX: state.launchButton.x, clientY: launchButtonY, pointerId: 501, pointerType: "touch" });
+listeners.pointerup({ clientX: state.launchButton.x, clientY: launchButtonY - 50, pointerId: 501, pointerType: "touch" });
+assert.equal(state.launched, true);
+assert.equal(state.lastFlightX, 0);
+assert.equal(state.lastFlightY, -1);
+assert.equal(state.pointerInside, false);
+
 console.log("game tests passed");

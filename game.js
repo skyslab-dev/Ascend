@@ -3991,7 +3991,13 @@ canvas.addEventListener("pointerup", (event) => {
 
   if (!state.launched && draggedUp > Math.max(34, state.height * 0.045)) {
     state.launchButton.y = state.launchButton.homeY;
-    setPointerTarget(event);
+    state.pointerX = state.width / 2;
+    state.pointerY = 0;
+    state.pointerInside = false;
+    state.lastFlightX = 0;
+    state.lastFlightY = -1;
+    state.targetViewOffsetX = 0;
+    state.viewOffsetX = 0;
     launch();
   } else if (!state.launched) {
     state.launchButton.y = state.launchButton.homeY;
