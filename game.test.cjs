@@ -542,8 +542,16 @@ state.asteroids = [];
 
 state.nextAsteroidY = Infinity;
 state.nextLaneChallengeY = run("state.cameraY + getWorldScreenOriginY() + 400");
+state.viewOffsetX = 0;
 run("spawnAsteroids({ x: Math.SQRT1_2, y: -Math.SQRT1_2 })");
 assert.equal(state.asteroids.filter((asteroid) => asteroid.laneChallenge).length, 1);
+const diagonalChallenge = state.asteroids.find((asteroid) => asteroid.laneChallenge);
+const diagonalApproachTime = 400 / (Math.SQRT1_2 * state.flightSpeed);
+const diagonalArrivalX = run(
+  `wrapAsteroidX(${diagonalChallenge.x} - Math.SQRT1_2 * state.flightSpeed * ${diagonalApproachTime}, ${diagonalChallenge.radius})`
+);
+assert.ok(Math.abs(diagonalArrivalX - state.aircraft.x) < 1);
+assert.ok(Math.abs(diagonalChallenge.driftX) < 5);
 state.asteroids = [];
 
 state.pointerInside = true;

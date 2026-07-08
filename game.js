@@ -500,7 +500,7 @@ function resetRun() {
   state.trail = [];
   state.trailAccumulator = 0;
   state.nextAsteroidY = getWorldScreenOriginY() + 620;
-  state.nextLaneChallengeY = getWorldScreenOriginY() + markToWorldY(70);
+  state.nextLaneChallengeY = getWorldScreenOriginY() + markToWorldY(45);
   state.nextCollectibleY = getWorldScreenOriginY() + 760;
   state.lastTime = performance.now();
   const floorTop = getFloorTopY(0);
@@ -2316,8 +2316,8 @@ function spawnAsteroids(direction = { x: 0, y: -1 }) {
       state.asteroids.push(challenge);
     }
     state.nextLaneChallengeY += randomBetween(
-      470 - difficulty * 80,
-      620 - difficulty * 100
+      440 - difficulty * 100,
+      580 - difficulty * 130
     );
   }
 
@@ -2390,7 +2390,14 @@ function makeLaneChallenge(worldY, difficulty, direction) {
 
   const asteroid = buildAsteroid(worldY, difficulty, radius, x);
   asteroid.laneChallenge = true;
+  asteroid.driftX *= 0.15;
+  asteroid.driftY *= 0.15;
   return asteroid;
+}
+
+function wrapAsteroidX(value, radius) {
+  const padding = radius * 1.4;
+  return -padding + wrap(value + padding, state.width + padding * 2);
 }
 
 function findLaneChallengeSpawnX(worldY, radius, direction) {
@@ -2400,19 +2407,14 @@ function findLaneChallengeSpawnX(worldY, radius, direction) {
   );
   const verticalSpeed = Math.max(0.35, -direction.y) * state.flightSpeed;
   const approachTime = clamp(leadDistance / verticalSpeed, 0.4, 3);
-  const projectedX = wrap(
-    state.aircraft.x + direction.x * state.flightSpeed * approachTime,
-    state.width
+  const projectedX = wrapAsteroidX(
+    state.aircraft.x + direction.x * state.flightSpeed * approachTime - state.viewOffsetX * 0.3,
+    radius
   );
   const offsets = [0, -1.25, 1.25, -2.35, 2.35];
-  const edgePadding = radius * 0.62;
 
   for (const offset of offsets) {
-    const candidateX = clamp(
-      wrap(projectedX + offset * radius, state.width),
-      edgePadding,
-      state.width - edgePadding
-    );
+    const candidateX = wrapAsteroidX(projectedX + offset * radius, radius);
     if (getAsteroidSpawnClearance(candidateX, worldY, radius) >= radius * 0.12) {
       return candidateX;
     }
@@ -2467,10 +2469,8 @@ function updateAsteroids(deltaSeconds, direction, travelSpeed) {
     asteroid.worldY += asteroid.driftY * deltaSeconds;
     asteroid.rotation += asteroid.spin * deltaSeconds;
     const wrapPadding = asteroid.radius * 1.4;
-    if (asteroid.x < -wrapPadding) {
-      asteroid.x = state.width + wrapPadding;
-    } else if (asteroid.x > state.width + wrapPadding) {
-      asteroid.x = -wrapPadding;
+    if (asteroid.x < -wrapPadding || asteroid.x > state.width + wrapPadding) {
+      asteroid.x = wrapAsteroidX(asteroid.x, asteroid.radius);
     }
   }
 
