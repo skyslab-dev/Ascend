@@ -500,7 +500,7 @@ function resetRun() {
   state.trail = [];
   state.trailAccumulator = 0;
   state.nextAsteroidY = getWorldScreenOriginY() + 620;
-  state.nextLaneChallengeY = getWorldScreenOriginY() + markToWorldY(45);
+  state.nextLaneChallengeY = getWorldScreenOriginY() + markToWorldY(35);
   state.nextCollectibleY = getWorldScreenOriginY() + 760;
   state.lastTime = performance.now();
   const floorTop = getFloorTopY(0);
@@ -2322,10 +2322,7 @@ function spawnAsteroids(direction = { x: 0, y: -1 }) {
   }
 
   while (state.nextAsteroidY < lookAheadY) {
-    const asteroid = makeAsteroid(state.nextAsteroidY, difficulty, openingProgress);
-    if (asteroid) {
-      state.asteroids.push(asteroid);
-    }
+    spawnAsteroidFormation(state.nextAsteroidY, difficulty, openingProgress);
     state.nextAsteroidY += getAsteroidSpacing(difficulty, openingProgress);
   }
 }
@@ -2333,9 +2330,42 @@ function spawnAsteroids(direction = { x: 0, y: -1 }) {
 function getAsteroidSpacing(difficulty, openingProgress = 1) {
   const openingSpace = 1 - openingProgress;
   return randomBetween(
-    100 - difficulty * 20 + openingSpace * 55,
-    170 - difficulty * 30 + openingSpace * 60
+    145 - difficulty * 20 + openingSpace * 55,
+    220 - difficulty * 35 + openingSpace * 65
   );
+}
+
+function getAsteroidFormationSize(difficulty, openingProgress) {
+  let size = 1;
+  if (Math.random() < openingProgress * (0.52 + difficulty * 0.28)) {
+    size += 1;
+  }
+  if (difficulty > 0.35 && Math.random() < (difficulty - 0.35) * 0.72) {
+    size += 1;
+  }
+  return size;
+}
+
+function spawnAsteroidFormation(worldY, difficulty, openingProgress = 1) {
+  const formationSize = getAsteroidFormationSize(difficulty, openingProgress);
+  let spawned = 0;
+
+  for (let index = 0; index < formationSize; index += 1) {
+    const verticalSpread = index === 0
+      ? 0
+      : randomBetween(-70, 70) * (0.65 + difficulty * 0.35);
+    const asteroid = makeAsteroid(
+      worldY + verticalSpread,
+      difficulty,
+      openingProgress
+    );
+    if (!asteroid) continue;
+    asteroid.formationIndex = index;
+    state.asteroids.push(asteroid);
+    spawned += 1;
+  }
+
+  return spawned;
 }
 
 function makeAsteroid(worldY, difficulty, openingProgress = 1) {

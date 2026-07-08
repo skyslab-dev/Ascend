@@ -488,13 +488,14 @@ assert.notEqual(
 const lowDifficultySpacing = run("Array.from({ length: 100 }, () => getAsteroidSpacing(0))");
 const highDifficultySpacing = run("Array.from({ length: 100 }, () => getAsteroidSpacing(1))");
 const openingSpacing = run("Array.from({ length: 100 }, () => getAsteroidSpacing(0, 0))");
-assert.ok(Math.min(...lowDifficultySpacing) >= 100);
-assert.ok(Math.max(...lowDifficultySpacing) <= 170);
-assert.ok(Math.min(...highDifficultySpacing) >= 80);
-assert.ok(Math.max(...highDifficultySpacing) <= 140);
-assert.ok(Math.min(...openingSpacing) >= 155);
-assert.ok(Math.max(...openingSpacing) <= 230);
+assert.ok(Math.min(...lowDifficultySpacing) >= 145);
+assert.ok(Math.max(...lowDifficultySpacing) <= 220);
+assert.ok(Math.min(...highDifficultySpacing) >= 125);
+assert.ok(Math.max(...highDifficultySpacing) <= 185);
+assert.ok(Math.min(...openingSpacing) >= 200);
+assert.ok(Math.max(...openingSpacing) <= 285);
 assert.ok(Math.min(...openingSpacing) > Math.min(...lowDifficultySpacing));
+assert.equal(run("getAsteroidFormationSize(0, 0)"), 1);
 state.asteroids = [
   { x: 65, worldY: 900, radius: 80 },
   { x: 195, worldY: 900, radius: 80 },
