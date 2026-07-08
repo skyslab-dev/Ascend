@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ascend</title>
+  <link rel="stylesheet" href="styles.css?v=20260707-3">
+</head>
+<body>
+  <main class="game-shell" id="gameShell" aria-label="Ascend game">
+    <canvas id="game" aria-label="Vertical scrolling aircraft game"></canvas>
+    <section class="hud" aria-label="Game status">
+      <div class="hud-stack">
+        <div class="hud-panel">
+          <span class="hud-label">Altitude</span>
+          <strong id="altitude">0 km</strong>
+        </div>
+        <div class="hud-panel lives-panel">
+          <span class="hud-label">Lives</span>
+          <div class="life-dots" id="lives" aria-label="3 lives"></div>
+        </div>
+      </div>
+    </section>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="Pause game" aria-expanded="false">
+      <span></span>
+    </button>
+    <button class="boost-control" id="boostControl" type="button" aria-label="Boost fully charged" title="Boost">
+      <span class="boost-fill" aria-hidden="true"></span>
+      <span class="boost-symbol" aria-hidden="true">↑</span>
+    </button>
+    <div class="game-light-counter" id="gameLightCounter" aria-label="Collected lights">
+      <span class="game-light-orb" aria-hidden="true"></span>
+      <strong id="gameLightCount">0</strong>
+    </div>
+    <div class="menu-backdrop" id="menuBackdrop"></div>
+    <aside class="side-menu" id="sideMenu" aria-hidden="true" aria-label="Pause menu">
+      <strong class="pause-heading" id="pauseHeading">Paused</strong>
+      <div class="pause-frame">
+        <div class="pause-menu-actions" id="pauseMenuActions">
+          <button id="menuClose" type="button">Resume</button>
+          <button id="restart" type="button">Restart</button>
+          <button id="pauseShop" type="button">Shop</button>
+          <button id="pauseAdvancements" type="button">Advancements</button>
+          <button id="pauseLeaderboard" type="button">Leaderboard</button>
+          <button id="pauseMainMenu" type="button">Main Menu</button>
+          <button id="pauseSave" type="button">Save</button>
+        </div>
+        <section class="pause-subpanel hidden" id="pauseSavePanel" aria-label="Save game">
+          <strong>Save</strong>
+          <textarea id="saveCodeOutput" readonly aria-label="Save code"></textarea>
+          <button id="pauseSaveBack" type="button">Back</button>
+        </section>
+        <section class="pause-subpanel advancements-panel hidden" id="pauseAdvancementsPanel" aria-label="Advancements">
+          <strong>Advancements</strong>
+          <article class="advancement-item" id="advancementLightSeeker"><strong>Light Seeker</strong><span>Collect 100 lifetime lights</span><small id="advancementLightSeekerReward">Aurora trail</small><div><i id="advancementLightSeekerFill"></i></div><em id="advancementLightSeekerProgress">0 / 100</em></article>
+          <article class="advancement-item" id="advancementSkybound"><strong>Skybound</strong><span>Reach 1,000 km</span><small id="advancementSkyboundReward">Prism aircraft</small><div><i id="advancementSkyboundFill"></i></div><em id="advancementSkyboundProgress">0 / 1000</em></article>
+          <article class="advancement-item" id="advancementResilient"><strong>Resilient</strong><span>Survive 20 asteroid hits</span><small id="advancementResilientReward">???</small><div><i id="advancementResilientFill"></i></div><em id="advancementResilientProgress">0 / 20</em></article>
+          <article class="advancement-item" id="advancementVoyager"><strong>Voyager</strong><span>Reach 10,000 km</span><small id="advancementVoyagerReward">Halo aircraft</small><div><i id="advancementVoyagerFill"></i></div><em id="advancementVoyagerProgress">0 / 10000</em></article>
+          <article class="advancement-item" id="advancementGlowkeeper"><strong>Glowkeeper</strong><span>Collect 500 lifetime lights</span><small id="advancementGlowkeeperReward">Star trail</small><div><i id="advancementGlowkeeperFill"></i></div><em id="advancementGlowkeeperProgress">0 / 500</em></article>
+          <article class="advancement-item" id="advancementHighOrbit"><strong>High Orbit</strong><span>Reach 50,000 km</span><small id="advancementHighOrbitReward">Diamond trail</small><div><i id="advancementHighOrbitFill"></i></div><em id="advancementHighOrbitProgress">0 / 50000</em></article>
+          <article class="advancement-item" id="advancementEnduring"><strong>Enduring</strong><span>Survive 50 asteroid hits</span><small id="advancementEnduringReward">???</small><div><i id="advancementEnduringFill"></i></div><em id="advancementEnduringProgress">0 / 50</em></article>
+          <article class="advancement-item" id="advancementBeacon"><strong>Beacon</strong><span>Collect 1,000 lifetime lights</span><small id="advancementBeaconReward">Spark trail</small><div><i id="advancementBeaconFill"></i></div><em id="advancementBeaconProgress">0 / 1000</em></article>
+          <article class="advancement-item" id="advancementDeepSpace"><strong>Deep Space</strong><span>Reach 100,000 km</span><small id="advancementDeepSpaceReward">Ring trail</small><div><i id="advancementDeepSpaceFill"></i></div><em id="advancementDeepSpaceProgress">0 / 100000</em></article>
+          <article class="advancement-item" id="advancementUnshaken"><strong>Unshaken</strong><span>Survive 100 asteroid hits</span><small id="advancementUnshakenReward">???</small><div><i id="advancementUnshakenFill"></i></div><em id="advancementUnshakenProgress">0 / 100</em></article>
+          <article class="advancement-item hidden" id="advancementMillion"><strong>Beyond Measure</strong><span>Reached 1,000,000 km</span><small id="advancementMillionReward">Diamond aircraft</small><div><i id="advancementMillionFill"></i></div><em id="advancementMillionProgress">1,000,000 / 1,000,000</em></article>
+          <button id="pauseAdvancementsBack" type="button">Back</button>
+        </section>
+        <section class="pause-subpanel leaderboard-panel hidden" id="pauseLeaderboardPanel" aria-label="Cloud leaderboard">
+          <strong class="leaderboard-category" id="pauseLeaderboardHeading">Score</strong>
+          <span class="leaderboard-personal-label">Your Top Score</span>
+          <div class="leaderboard-personal" id="pauseLeaderboardPersonal">No completed run</div>
+          <div class="leaderboard-carousel"><button class="leaderboard-arrow" id="pauseLeaderboardLeft" type="button" aria-label="Previous leaderboard">‹</button><ol class="leaderboard-list" id="pauseLeaderboardList"></ol><button class="leaderboard-arrow" id="pauseLeaderboardRight" type="button" aria-label="Next leaderboard">›</button></div>
+          <span class="leaderboard-status" id="pauseLeaderboardStatus" aria-live="polite"></span>
+          <button id="pauseLeaderboardBack" type="button">Back</button>
+        </section>
+        <section class="shop-catalog" aria-label="Shop catalog">
+          <div class="shop-balance" aria-label="Collected lights">
+            <span class="shop-light" aria-hidden="true"></span>
+            <strong id="shopLightCount">0</strong>
+          </div>
+          <div class="shop-section">
+            <div class="shop-section-heading">
+              <strong>Aircraft</strong>
+              <span>Styles</span>
+            </div>
+            <div class="shop-grid">
+              <button class="shop-item" id="shopAircraftClassic" type="button" data-description="Balanced speed, turning, and boost." aria-label="Classic. Balanced aircraft.">
+                <span class="shop-ship classic" aria-hidden="true"></span>
+                <strong>Classic</strong>
+                <small id="shopAircraftClassicLabel">Owned</small>
+              </button>
+              <button class="shop-item" id="shopAircraftDart" type="button" data-description="Faster, agile, and a slimmer hitbox." aria-label="Dart. Faster agile aircraft with a slimmer hitbox.">
+                <span class="shop-ship dart" aria-hidden="true"></span>
+                <strong>Dart</strong>
+                <small id="shopAircraftDartLabel">30 lights</small>
+              </button>
+              <button class="shop-item" id="shopAircraftGlider" type="button" data-description="Slower, highly agile, with a longer boost." aria-label="Glider. Slower agile aircraft with a longer boost.">
+                <span class="shop-ship wide" aria-hidden="true"></span>
+                <strong>Glider</strong>
+                <small id="shopAircraftGliderLabel">45 lights</small>
+              </button>
+              <button class="shop-item" id="shopAircraftArrow" type="button" data-description="Fast, very agile, with an extended boost." aria-label="Arrow. Fast agile aircraft with an extended boost.">
+                <span class="shop-ship arrow" aria-hidden="true"></span>
+                <strong>Arrow</strong>
+                <small id="shopAircraftArrowLabel">60 lights</small>
+              </button>
+              <button class="shop-item" id="shopAircraftComet" type="button" data-description="The fastest aircraft, with heavier turning." aria-label="Comet. Fastest aircraft with heavier turning.">
+                <span class="shop-ship comet" aria-hidden="true"></span>
+                <strong>Comet</strong>
+                <small id="shopAircraftCometLabel">75 lights</small>
+              </button>
+              <button class="shop-item" id="shopAircraftWisp" type="button" data-description="A light frame with the longest boost." aria-label="Wisp. Light aircraft with the longest boost.">
+                <span class="shop-ship wisp" aria-hidden="true"></span>
+                <strong>Wisp</strong>
+                <small id="shopAircraftWispLabel">90 lights</small>
+              </button>
+              <button class="shop-item reward-item" id="shopAircraftHalo" type="button" data-description="Locked reward." aria-label="Locked aircraft reward.">
+                <span class="shop-ship halo" aria-hidden="true"></span>
+                <strong>Halo</strong>
+                <small id="shopAircraftHaloLabel">???</small>
+              </button>
+              <button class="shop-item mystery-item" id="shopAircraftDiamond" type="button" data-description="Reach an extraordinary altitude to reveal this aircraft." aria-label="Unknown locked aircraft.">
+                <span class="shop-ship diamond" aria-hidden="true"></span>
+                <strong id="shopAircraftDiamondName">???</strong>
+                <small id="shopAircraftDiamondLabel">???</small>
+              </button>
+              <button class="shop-item reward-item" id="shopAircraftPrism" type="button" data-description="Locked reward." aria-label="Locked aircraft reward.">
+                <span class="shop-ship prism" aria-hidden="true"></span>
+                <strong>Prism</strong>
+                <small id="shopAircraftPrismLabel">???</small>
+              </button>
+            </div>
+            <output class="shop-description-popup hidden" id="shopDescriptionPopup" aria-live="polite"></output>
+          </div>
+          <div class="shop-section">
+            <div class="shop-section-heading">
+              <strong>Trails</strong>
+              <span>Light</span>
+            </div>
+            <div class="trail-options" aria-label="Trail colors">
+              <button class="trail-choice" id="shopTrailWhite" type="button"><span class="trail-swatch white"></span><small id="shopTrailWhiteLabel">Owned</small></button>
+              <button class="trail-choice" id="shopTrailBlue" type="button"><span class="trail-swatch blue"></span><small id="shopTrailBlueLabel">20</small></button>
+              <button class="trail-choice" id="shopTrailPink" type="button"><span class="trail-swatch pink"></span><small id="shopTrailPinkLabel">20</small></button>
+              <button class="trail-choice" id="shopTrailPurple" type="button"><span class="trail-swatch purple"></span><small id="shopTrailPurpleLabel">20</small></button>
+              <button class="trail-choice" id="shopTrailAurora" type="button" aria-label="Locked trail reward"><span class="trail-swatch aurora"></span><small id="shopTrailAuroraLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailStardust" type="button" aria-label="Locked trail reward"><span class="trail-swatch stardust"></span><small id="shopTrailStardustLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailStars" type="button" aria-label="Star trail"><span class="trail-swatch effect">★</span><small id="shopTrailStarsLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailHearts" type="button" aria-label="Heart trail"><span class="trail-swatch effect">♥</span><small id="shopTrailHeartsLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailDiamonds" type="button" aria-label="Diamond trail"><span class="trail-swatch effect">◆</span><small id="shopTrailDiamondsLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailRings" type="button" aria-label="Ring trail"><span class="trail-swatch effect">○</span><small id="shopTrailRingsLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailSparks" type="button" aria-label="Spark trail"><span class="trail-swatch effect">✦</span><small id="shopTrailSparksLabel">???</small></button>
+              <button class="trail-choice" id="shopTrailPetals" type="button" aria-label="Petal trail"><span class="trail-swatch effect">✤</span><small id="shopTrailPetalsLabel">???</small></button>
+            </div>
+            <span class="shop-status" id="shopStatus" aria-live="polite"></span>
+          </div>
+          <button class="shop-back" id="shopBack" type="button">Back</button>
+        </section>
+      </div>
+    </aside>
+    <section class="game-over-panel hidden" id="gameOverPanel" aria-label="Run ended">
+      <div class="game-over-content">
+        <span class="game-over-label">Journey Ended</span>
+        <strong class="final-altitude" id="finalAltitude">0</strong>
+        <span class="personal-best">Personal best · <strong id="bestAltitude">0</strong></span>
+        <div class="game-over-actions">
+          <button id="centerRestart" type="button">Restart</button>
+          <button id="returnToTitle" type="button">Main Menu</button>
+        </div>
+      </div>
+    </section>
+    <section class="player-name-prompt hidden" id="playerNamePrompt" aria-label="Choose player name">
+      <strong>Leaderboard Score</strong>
+      <span>Enter a name for your top-10 run</span>
+      <input id="playerNameInput" maxlength="18" autocomplete="nickname" aria-label="Leaderboard name" placeholder="Your name">
+      <button id="playerNameConfirm" type="button">Continue</button>
+      <small id="playerNameStatus" aria-live="polite"></small>
+    </section>
+    <aside class="advancement-popup hidden" id="advancementPopup" aria-live="polite">
+      <span>Advancement complete</span>
+      <strong id="advancementPopupTitle"></strong>
+      <small id="advancementPopupReward"></small>
+    </aside>
+    <section class="start-panel" id="startPanel">
+      <p>Drag the up button, then release.</p>
+      <button class="start-shop" id="startShop" type="button" aria-label="Shop" title="Shop">
+        <svg class="shop-store-icon" viewBox="0 0 78 78" aria-hidden="true">
+          <path d="M8 34 17 11c1.5-4 4.5-6 9-6h27c4.5 0 7.5 2 9 6l8 23c2 6-2 12-8 13-6 1-11-3-11-9 0 6-5 10-11 10s-11-4-11-10c0 6-5 10-11 9-7-1-12-7-10-13Z" />
+          <path d="M18 47v17c0 5 3 8 8 8h27c5 0 8-3 8-8V47" />
+          <path d="M34 72V59c0-3 2-5 5-5s5 2 5 5v13" />
+        </svg>
+      </button>
+    </section>
+    <section class="title-screen splash-active" id="titleScreen" aria-label="Ascend main menu">
+      <canvas id="titleCanvas" aria-hidden="true"></canvas>
+      <section class="splash-screen" id="splashScreen" role="button" tabindex="0" aria-label="Continue to game">
+        <h1>Ascend</h1>
+        <p>Press anywhere to continue</p>
+      </section>
+      <div class="title-brand">
+        <h1 id="titleHeading">Ascend</h1>
+      </div>
+      <nav class="title-menu" id="titleMenu" aria-label="Main menu">
+        <button id="titleContinue" type="button">Continue</button>
+        <button id="titlePlay" type="button">Play</button>
+        <button id="titleSettings" type="button">Settings</button>
+        <button id="titleLeaderboard" type="button">Leaderboard</button>
+        <button id="titleTutorial" type="button">Tutorial</button>
+        <button id="titleCredits" type="button">Credits</button>
+      </nav>
+      <section class="title-submenu hidden" id="titlePlayPanel" aria-label="Play">
+        <h2>Play</h2>
+        <button id="titleNewGame" type="button">New Game</button>
+        <button id="titleLoadGame" type="button">Load Game</button>
+        <button id="titlePlayBack" type="button">Back</button>
+      </section>
+      <section class="title-submenu hidden" id="titleLoadPanel" aria-label="Load game">
+        <h2>Load Game</h2>
+        <textarea id="loadCodeInput" aria-label="Paste save code" placeholder="Paste save code"></textarea>
+        <span class="load-status" id="loadCodeStatus" aria-live="polite"></span>
+        <button id="titleLoadConfirm" type="button">Load</button>
+        <button id="titleLoadBack" type="button">Back</button>
+      </section>
+      <section class="title-settings hidden" id="titleSettingsPanel" aria-label="Settings">
+        <h2>Settings</h2>
+        <label class="setting-row" for="screenShakeSetting">
+          <span>Screen shake</span>
+          <input id="screenShakeSetting" type="checkbox" checked>
+        </label>
+        <label class="setting-row" for="musicSetting">
+          <span>Music</span>
+          <input id="musicSetting" type="checkbox" checked>
+        </label>
+        <label class="setting-row" for="sfxSetting">
+          <span>Sound effects</span>
+          <input id="sfxSetting" type="checkbox" checked>
+        </label>
+        <button id="titleSettingsBack" type="button">Back</button>
+      </section>
+      <section class="title-submenu leaderboard-panel hidden" id="titleLeaderboardPanel" aria-label="Cloud leaderboard">
+        <h2>Leaderboard</h2>
+        <strong class="leaderboard-category" id="titleLeaderboardHeading">Score</strong>
+        <span class="leaderboard-personal-label">Your Top Score</span>
+        <div class="leaderboard-personal" id="titleLeaderboardPersonal">No completed run</div>
+        <div class="leaderboard-carousel"><button class="leaderboard-arrow" id="titleLeaderboardLeft" type="button" aria-label="Previous leaderboard">‹</button><ol class="leaderboard-list" id="titleLeaderboardList"></ol><button class="leaderboard-arrow" id="titleLeaderboardRight" type="button" aria-label="Next leaderboard">›</button></div>
+        <span class="leaderboard-status" id="titleLeaderboardStatus" aria-live="polite"></span>
+        <button id="titleLeaderboardBack" type="button">Back</button>
+      </section>
+      <section class="title-submenu hidden" id="titleTutorialPanel" aria-label="Tutorial">
+        <h2>Tutorial</h2>
+        <p>Guide the rocket with your pointer or finger.</p>
+        <p>Hold Space or the boost button for speed and protection.</p>
+        <p>Avoid asteroids and collect pastel lights.</p>
+        <button id="titleTutorialBack" type="button">Back</button>
+      </section>
+      <section class="title-submenu hidden" id="titleCreditsPanel" aria-label="Credits">
+        <h2>Credits</h2>
+        <p>Game design, artwork, and direction by the Ascend team.</p>
+        <button id="titleCreditsBack" type="button">Back</button>
+      </section>
+    </section>
+  </main>
+  <script src="leaderboard-config.js"></script>
+  <script src="game.js?v=20260707-11"></script>
+</body>
+</html>
