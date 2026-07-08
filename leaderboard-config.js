@@ -1,4 +1,4 @@
 window.ASCEND_LEADERBOARD = {
-  firebaseProjectId: "",
-  firebaseApiKey: ""
+  firebaseProjectId: "ascend-c635b",
+  firebaseApiKey: "AIzaSyDBBWWtSKdSymmqgqyvRHK1Kb9Td8N1Arc"
 };
