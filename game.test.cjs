@@ -1006,6 +1006,8 @@ assert.equal(state.launched, true);
 assert.equal(state.lastFlightX, 0);
 assert.equal(state.lastFlightY, -1);
 assert.equal(state.pointerInside, false);
+assert.equal(elements.boostControl.classList.contains("visible"), true);
+assert.equal(elements.boostControl.classList.contains("available"), true);
 
 storedValues.delete("ascend-anonymous-sequence");
 assert.equal(run("getNextAnonymousName()"), "Pilot0");

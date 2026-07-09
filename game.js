@@ -1059,6 +1059,8 @@ function launch() {
   state.aircraft.tilt = 0;
   state.lastTime = performance.now();
   startPanel.classList.add("hidden");
+  // Do not wait for the first animation frame to reveal the in-flight boost control.
+  updateBoostDisplay();
   state.animationFrameId = requestAnimationFrame(loop);
 }
 
@@ -3839,7 +3841,7 @@ function updateBoostDisplay() {
   boostControl.setAttribute("aria-label", `Boost ${percentage}% charged`);
   boostControl.setAttribute("aria-pressed", state.boostActive ? "true" : "false");
   boostControl.classList.remove("visible", "available", "active");
-  if (!state.titleScreenVisible && !state.gameOver && !state.paused) {
+  if (!state.titleScreenVisible && !state.gameOver && !state.shopScreenVisible) {
     boostControl.classList.add("visible");
   }
   if (state.launched && !state.gameOver && !state.paused) {
