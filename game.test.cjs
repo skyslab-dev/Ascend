@@ -97,6 +97,7 @@ const elements = {
   pauseHeading: makeElement(),
   shopBack: makeElement(),
   shopLightCount: makeElement(),
+  gameLightCounter: makeElement(),
   gameLightCount: makeElement(),
   shopStatus: makeElement(),
   shopAircraftClassic: makeElement(),
@@ -285,7 +286,8 @@ assert.deepEqual(
   JSON.parse(JSON.stringify(run("getLeaderboardConfig()"))),
   {
     url: "https://firestore.googleapis.com/v1/projects/ascend-test/databases/(default)/documents",
-    key: "test-key"
+    key: "test-key",
+    writesEnabled: true
   }
 );
 assert.deepEqual(
@@ -325,7 +327,7 @@ assert.equal(
     { player_name: "a", altitude: 90 },
     { player_name: "B", altitude: 80 }
   ]))`),
-  JSON.stringify([{ player_name: "A", altitude: 100 }, { player_name: "B", altitude: 80 }])
+  JSON.stringify([{ player_name: "A", altitude: 100 }, { player_name: "a", altitude: 90 }, { player_name: "B", altitude: 80 }])
 );
 assert.equal(
   run("getShopItems().findIndex(item => item.id === 'aircraft-diamond')"),

@@ -129,6 +129,7 @@ const advancementPopupTitle = document.getElementById("advancementPopupTitle");
 const advancementPopupReward = document.getElementById("advancementPopupReward");
 const saveCodeOutput = document.getElementById("saveCodeOutput");
 const boostControl = document.getElementById("boostControl");
+const gameLightCounter = document.getElementById("gameLightCounter");
 
 const altitudeMarks = [
   0, 10, 100, 500, 1000, 1500, 5000, 10000, 15000, 20000, 50000
@@ -542,6 +543,11 @@ function applyAircraftStats() {
   const stats = getCurrentAircraftStats();
   state.flightSpeed = stats.flightSpeed;
   state.turnSpeed = stats.turnSpeed;
+}
+
+function getViewportSpeedScale() {
+  const shortSide = Math.min(state.width || window.innerWidth || 390, state.height || window.innerHeight || 844);
+  return clamp(shortSide / 520, 0.72, 1);
 }
 
 function makeAtmosphere() {
@@ -1156,7 +1162,8 @@ function getLeaderboardConfig() {
   if (!config?.firebaseProjectId || !config?.firebaseApiKey) return null;
   return {
     url: `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(config.firebaseProjectId)}/databases/(default)/documents`,
-    key: config.firebaseApiKey
+    key: config.firebaseApiKey,
+    writesEnabled: config.firebaseWritesEnabled !== false
   };
 }
 
@@ -1240,16 +1247,7 @@ function getNextAnonymousName() {
 
 function uniqueTopScores(scores, metricKey = "score") {
   const sortedScores = [...scores].sort((a, b) => Number(b[metricKey]) - Number(a[metricKey]));
-  const names = new Set();
-  const unique = [];
-  for (const score of sortedScores) {
-    const key = String(score.player_name).trim().toLocaleLowerCase();
-    if (!key || names.has(key)) continue;
-    names.add(key);
-    unique.push(score);
-    if (unique.length === 10) break;
-  }
-  return unique;
+  return sortedScores.filter((score) => String(score.player_name).trim()).slice(0, 10);
 }
 
 function renderLeaderboard(list, scores, metric = leaderboardMetrics[leaderboardMetricIndex]) {
@@ -1361,7 +1359,7 @@ async function submitLeaderboardScore(score, height, totalLights, playerName = g
   } catch {
     // The run is still submitted even when local storage is unavailable.
   }
-  if (!config) return true;
+  if (!config || !config.writesEnabled) return true;
   try {
     const response = await fetch(`${config.url}/leaderboard?key=${encodeURIComponent(config.key)}`, {
       method: "POST",
@@ -1397,12 +1395,14 @@ async function runQualifiesForLeaderboard(record) {
 async function offerLeaderboardEntry(score, height, totalLights) {
   const record = { score: Math.floor(score), height: Math.floor(height), total_lights: Math.floor(totalLights) };
   if (record.score < 0) return;
+  pendingLeaderboardRecord = record;
   const qualifies = await runQualifiesForLeaderboard(record);
+  if (!pendingLeaderboardRecord) return;
   if (qualifies && state.gameOver) {
-    pendingLeaderboardRecord = record;
     showPlayerNamePrompt();
     return;
   }
+  pendingLeaderboardRecord = null;
   submitLeaderboardScore(record.score, record.height, record.total_lights, getNextAnonymousName());
 }
 
@@ -1573,6 +1573,18 @@ function openShopFromPause() {
   shopStatus.textContent = "";
   sideMenu.classList.add("shop-open");
   sideMenu.setAttribute("aria-label", "Shop");
+}
+
+function openShopFromLightCounter() {
+  if (state.gameOver || state.titleScreenVisible) return;
+  if (!state.launched) {
+    openLandedShop();
+    return;
+  }
+  if (!sideMenu.classList.contains("open")) {
+    togglePauseMenu();
+  }
+  openShopFromPause();
 }
 
 function closeLandedShop() {
@@ -2487,10 +2499,10 @@ function findLaneChallengeSpawnX(worldY, radius, direction) {
     0,
     worldY - state.cameraY - getWorldScreenOriginY()
   );
-  const verticalSpeed = Math.max(0.35, -direction.y) * state.flightSpeed;
+  const verticalSpeed = Math.max(0.35, -direction.y) * state.flightSpeed * getViewportSpeedScale();
   const approachTime = clamp(leadDistance / verticalSpeed, 0.4, 3);
   const projectedX = wrapAsteroidX(
-    state.aircraft.x + direction.x * state.flightSpeed * approachTime - state.viewOffsetX * 0.3,
+    state.aircraft.x + direction.x * state.flightSpeed * getViewportSpeedScale() * approachTime - state.viewOffsetX * 0.3,
     radius
   );
   const offsets = [0, -1.25, 1.25, -2.35, 2.35];
@@ -3759,7 +3771,7 @@ function updateGroundHorizontalOffset(direction, travelSpeed, deltaSeconds) {
 
 function getImpactAdjustedTravelSpeed() {
   const stats = getCurrentAircraftStats();
-  const flightSpeed = state.boostActive ? stats.boostSpeed : stats.flightSpeed;
+  const flightSpeed = (state.boostActive ? stats.boostSpeed : stats.flightSpeed) * getViewportSpeedScale();
   if (state.impactRecoilTime > 0) {
     return flightSpeed * -0.38;
   }
@@ -4107,6 +4119,10 @@ boostControl.addEventListener("pointerup", (event) => {
   setBoostHeld(false);
 });
 boostControl.addEventListener("pointercancel", () => setBoostHeld(false));
+gameLightCounter.addEventListener("click", (event) => {
+  event.preventDefault();
+  openShopFromLightCounter();
+});
 window.addEventListener("resize", resize);
 window.addEventListener("keydown", (event) => {
   if (event.code === "KeyS" && !event.repeat && !state.titleScreenVisible && !state.gameOver) {

@@ -337,8 +337,8 @@ button:active {
 }
 
 .hud-panel {
-  min-width: 4.5rem;
-  padding: 0.36rem 0.46rem;
+  min-width: clamp(3.8rem, 17vw, 4.5rem);
+  padding: clamp(0.28rem, 1.2vw, 0.36rem) clamp(0.36rem, 1.6vw, 0.46rem);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 6px;
   background: rgba(20, 26, 42, 0.18);
@@ -349,7 +349,7 @@ button:active {
   display: block;
   margin-bottom: 0.15rem;
   color: rgba(248, 251, 255, 0.72);
-  font-size: 0.47rem;
+  font-size: clamp(0.4rem, 1.6vw, 0.47rem);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -455,8 +455,8 @@ button:active {
   z-index: 30;
   display: grid;
   place-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: clamp(1.75rem, 7vw, 2rem);
+  height: clamp(1.75rem, 7vw, 2rem);
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background: rgba(20, 26, 42, 0.18);
@@ -803,7 +803,18 @@ button:active {
 .player-name-prompt > strong { font-size: 0.84rem; text-transform: uppercase; }
 .player-name-prompt > span,
 .player-name-prompt > small { color: rgba(248, 251, 255, 0.68); font-size: 0.6rem; }
-.player-name-prompt input { min-height: 2.2rem; border: 1px solid rgba(255,255,255,0.24); border-radius: 6px; padding: 0 0.6rem; background: rgba(20,26,42,0.18); backdrop-filter: blur(5px); color: #fff; text-align: center; }
+.player-name-prompt input {
+  display: block;
+  width: 100%;
+  min-height: 2.2rem;
+  border: 1px solid rgba(255,255,255,0.24);
+  border-radius: 6px;
+  padding: 0 0.6rem;
+  background: rgba(20,26,42,0.18);
+  backdrop-filter: blur(5px);
+  color: #fff;
+  text-align: center;
+}
 .player-name-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
 .player-name-actions button { min-height: 2.1rem; }
 
@@ -813,7 +824,10 @@ button:active {
   max-width: 64rem;
   height: 100%;
   margin: 0 auto;
-  overflow: hidden;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   transform: none;
 }
 
@@ -854,8 +868,8 @@ button:active {
   bottom: max(0.65rem, env(safe-area-inset-bottom));
   z-index: 12;
   display: flex;
-  min-width: 2.8rem;
-  height: 2rem;
+  min-width: clamp(2.35rem, 11vw, 2.8rem);
+  height: clamp(1.75rem, 7vw, 2rem);
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
@@ -865,8 +879,12 @@ button:active {
   background: rgba(20, 26, 42, 0.18);
   backdrop-filter: blur(5px);
   color: #f8fbff;
-  font-size: 0.68rem;
-  pointer-events: none;
+  font-size: clamp(0.58rem, 2.4vw, 0.68rem);
+  pointer-events: auto;
+}
+
+.game-light-counter:active {
+  transform: translateY(1px);
 }
 
 .game-light-orb {
@@ -1342,8 +1360,8 @@ button:active {
   position: absolute;
   bottom: max(0.6rem, env(safe-area-inset-bottom));
   left: max(0.6rem, env(safe-area-inset-left));
-  width: 2rem;
-  height: 2rem;
+  width: clamp(1.75rem, 7vw, 2rem);
+  height: clamp(1.75rem, 7vw, 2rem);
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 6px;
@@ -1354,16 +1372,11 @@ button:active {
   pointer-events: auto;
 }
 
-.shop-store-icon {
+.start-shop span {
   display: block;
-  width: 1.25rem;
-  height: 1.25rem;
-  overflow: visible;
-  fill: none;
-  stroke: #f8fbff;
-  stroke-width: 5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  color: #f8fbff;
+  font-size: clamp(0.9rem, 3.5vw, 1rem);
+  line-height: 1;
   pointer-events: none;
 }
 
@@ -1401,8 +1414,11 @@ button:active {
 .game-over-content {
   display: grid;
   width: min(22rem, calc(100vw - 3rem));
+  max-height: calc(100dvh - 4rem);
   justify-items: center;
   gap: 0.65rem;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   text-align: center;
 }
 
@@ -1453,5 +1469,92 @@ button:active {
 
   button {
     padding: 0.36rem 0.46rem;
+  }
+}
+
+@media (max-width: 520px), (max-height: 620px) {
+  .hud {
+    top: max(0.45rem, env(safe-area-inset-top));
+    left: max(0.45rem, env(safe-area-inset-left));
+  }
+
+  .hud-stack {
+    gap: 0.22rem;
+  }
+
+  .pause-heading {
+    margin-bottom: clamp(0.45rem, 1.5vh, 0.75rem);
+    font-size: clamp(1.65rem, 9vw, 3rem);
+  }
+
+  .pause-frame,
+  .side-menu:not(.shop-open) .pause-frame,
+  .side-menu.leaderboard-open:not(.shop-open) .pause-frame {
+    width: calc(100vw - 1rem);
+    height: min(76dvh, calc(100dvh - 5.2rem));
+    max-height: calc(100dvh - 5.2rem);
+    padding: 1rem 1.35rem;
+  }
+
+  .pause-frame::before {
+    left: 0.55rem;
+  }
+
+  .pause-frame::after {
+    right: 0.55rem;
+  }
+
+  .side-menu.shop-open .shop-catalog {
+    align-content: start;
+    padding: 0 0.25rem max(0.8rem, env(safe-area-inset-bottom));
+  }
+
+  .shop-section,
+  .shop-balance {
+    width: min(100%, calc(100vw - 3rem));
+  }
+
+  .shop-section-heading {
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.3rem;
+  }
+
+  .shop-grid {
+    justify-content: flex-start;
+    gap: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .shop-item {
+    flex-basis: clamp(5.5rem, 28vw, 6.5rem);
+    min-height: clamp(5.25rem, 16dvh, 6.5rem);
+  }
+
+  .trail-options {
+    justify-content: flex-start;
+    gap: 0.55rem;
+    padding: 0.45rem 0;
+  }
+
+  .trail-choice {
+    min-width: 2.55rem;
+    gap: 0.35rem;
+    padding: 0.35rem;
+  }
+
+  .title-menu,
+  .title-settings,
+  .title-submenu {
+    left: max(1rem, env(safe-area-inset-left));
+    width: min(10.5rem, calc(100vw - 2rem));
+  }
+
+  .game-over-panel {
+    padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .game-over-content {
+    width: min(21rem, calc(100vw - 1.5rem));
+    max-height: calc(100dvh - 1.5rem);
   }
 }
