@@ -1094,6 +1094,7 @@ function openMenu() {
   menuToggleButton.classList.add("menu-open");
   sideMenu.setAttribute("aria-hidden", "false");
   menuToggleButton.setAttribute("aria-expanded", "true");
+  updateBoostDisplay();
 }
 
 function togglePauseMenu() {
@@ -1121,6 +1122,7 @@ function closeMenu(resume = true) {
   pauseHeading.textContent = "Paused";
   sideMenu.setAttribute("aria-label", "Pause menu");
   showPauseMenuActions();
+  updateBoostDisplay();
 
   if (resume && (state.launched || state.shakeTime > 0)) {
     state.lastTime = performance.now();
@@ -1512,6 +1514,7 @@ function dismissTitleScreen() {
   hasVisitedGameplayThisSession = true;
   titleScreen.classList.add("hidden");
   titleScreen.setAttribute("aria-hidden", "true");
+  updateBoostDisplay();
 }
 
 function dismissSplashScreen() {
@@ -1537,6 +1540,7 @@ function showSplashScreen() {
   splashScreen.classList.remove("hidden");
   splashScreen.setAttribute("aria-hidden", "false");
   drawTitleScreen();
+  updateBoostDisplay();
 }
 
 function openLandedShop() {
@@ -2214,6 +2218,7 @@ function returnToTitleScreen() {
   splashScreen.classList.add("hidden");
   splashScreen.setAttribute("aria-hidden", "true");
   drawTitleScreen();
+  updateBoostDisplay();
 }
 
 function fadeTitleShade() {
@@ -3833,8 +3838,11 @@ function updateBoostDisplay() {
   boostControl.style.setProperty("--boost-meter-width", `${meterWidth}px`);
   boostControl.setAttribute("aria-label", `Boost ${percentage}% charged`);
   boostControl.setAttribute("aria-pressed", state.boostActive ? "true" : "false");
-  boostControl.classList.remove("available", "active");
-  if (state.launched) {
+  boostControl.classList.remove("visible", "available", "active");
+  if (!state.titleScreenVisible && !state.gameOver && !state.paused) {
+    boostControl.classList.add("visible");
+  }
+  if (state.launched && !state.gameOver && !state.paused) {
     boostControl.classList.add("available");
   }
   if (state.boostActive) {
