@@ -1233,12 +1233,32 @@ function getPilotName() {
   }
 }
 
+function hasPilotName() {
+  try {
+    return Boolean(normalizePilotName(window.localStorage?.getItem("ascend-pilot-name") || ""));
+  } catch {
+    return false;
+  }
+}
+
+function clearPilotName() {
+  try {
+    window.localStorage?.removeItem("ascend-pilot-name");
+  } catch {
+    // A new save still behaves as unnamed for the current session.
+  }
+}
+
 function normalizePilotName(value) {
   return value.trim().replace(/\s+/g, " ").slice(0, 18);
 }
 
 function setPilotName(value) {
-  const name = normalizePilotName(value) || "Pilot";
+  const requestedName = normalizePilotName(value) || "Pilot";
+  const existingName = loadLocalLeaderboard().find(
+    (entry) => normalizePilotName(entry.player_name).toLocaleLowerCase() === requestedName.toLocaleLowerCase()
+  )?.player_name;
+  const name = existingName || requestedName;
   try {
     window.localStorage?.setItem("ascend-pilot-name", name);
   } catch {
@@ -1262,13 +1282,28 @@ function getNextAnonymousName() {
 }
 
 function uniqueTopScores(scores, metricKey = "score") {
-  return [...scores]
+  return bestScoresByUsername(scores)
     .filter((entry) => {
       const value = Number(entry?.[metricKey]);
       return typeof entry?.player_name === "string" && entry.player_name.trim() && Number.isFinite(value) && value >= 0;
     })
     .sort((a, b) => Number(b[metricKey]) - Number(a[metricKey]))
     .slice(0, 10);
+}
+
+function bestScoresByUsername(scores) {
+  const personalBests = new Map();
+  for (const entry of scores) {
+    const name = normalizePilotName(String(entry?.player_name ?? ""));
+    const score = Number(entry?.score);
+    if (!name || !Number.isFinite(score) || score < 0) continue;
+    const key = name.toLocaleLowerCase();
+    const current = personalBests.get(key);
+    if (!current || score > Number(current.score)) {
+      personalBests.set(key, { ...entry, player_name: current?.player_name || name });
+    }
+  }
+  return [...personalBests.values()];
 }
 
 function leaderboardRunIdentity(record) {
@@ -1327,6 +1362,28 @@ function saveLocalLeaderboard(scores) {
   }
 }
 
+function storeLocalPersonalBest(record) {
+  const localScores = loadLocalLeaderboard();
+  const requestedName = normalizePilotName(record.player_name);
+  const nameKey = requestedName.toLocaleLowerCase();
+  const existingBest = bestScoresByUsername(localScores).find(
+    (entry) => normalizePilotName(entry.player_name).toLocaleLowerCase() === nameKey
+  );
+  const candidate = { ...record, player_name: existingBest?.player_name || requestedName };
+  const isNewBest = !existingBest || Number(candidate.score) > Number(existingBest.score);
+  const bestRecord = isNewBest ? candidate : existingBest;
+  const scoresWithoutPlayer = localScores.filter(
+    (entry) => normalizePilotName(entry.player_name).toLocaleLowerCase() !== nameKey
+  );
+  saveLocalLeaderboard([...scoresWithoutPlayer, bestRecord]);
+  try {
+    window.localStorage?.setItem("ascend-last-run-result", JSON.stringify(bestRecord));
+  } catch {
+    // The personal best still remains in the local leaderboard when possible.
+  }
+  return { bestRecord, isNewBest };
+}
+
 function loadLastRunResult() {
   try {
     const result = JSON.parse(window.localStorage?.getItem("ascend-last-run-result") ?? "null");
@@ -1352,7 +1409,9 @@ async function renderPreviousRun(element, metric, localScores, config) {
       // The local rank remains useful while cloud ranking is unavailable.
     }
   }
-  const rank = 1 + rankingScores.filter((entry) => Number(entry[metric.key]) > Number(run[metric.key])).length;
+  const rank = 1 + bestScoresByUsername(rankingScores).filter(
+    (entry) => Number(entry[metric.key]) > Number(run[metric.key])
+  ).length;
   element.classList.remove("empty");
   element.replaceChildren();
   const rankNode = document.createElement("strong");
@@ -1394,23 +1453,17 @@ async function loadLeaderboard(list, status, personal) {
 
 async function submitLeaderboardScore(score, height, totalLights, playerName = getPilotName()) {
   const config = getLeaderboardConfig();
-  const name = normalizePilotName(playerName);
+  const requestedName = normalizePilotName(playerName);
   const record = {
-    player_name: name,
+    player_name: requestedName,
     score: Math.floor(score),
     height: Math.floor(height),
     total_lights: Math.floor(totalLights),
     run_id: randomCodeCharacters(14)
   };
-  if (!name || ![record.score, record.height, record.total_lights].every((value) => Number.isFinite(value) && value >= 0)) return false;
-  const localScores = loadLocalLeaderboard();
-  localScores.push(record);
-  saveLocalLeaderboard(localScores);
-  try {
-    window.localStorage?.setItem("ascend-last-run-result", JSON.stringify(record));
-  } catch {
-    // The run is still submitted even when local storage is unavailable.
-  }
+  if (!isValidLeaderboardRecord(record)) return false;
+  const { bestRecord, isNewBest } = storeLocalPersonalBest(record);
+  if (!isNewBest) return true;
   if (!config || !config.writesEnabled) return true;
   try {
     const response = await fetch(`${config.url}/leaderboard?key=${encodeURIComponent(config.key)}`, {
@@ -1444,18 +1497,16 @@ async function runQualifiesForLeaderboard(record) {
   });
 }
 
-async function offerLeaderboardEntry(score, height, totalLights) {
+function offerLeaderboardEntry(score, height, totalLights) {
   const record = { score: Math.floor(score), height: Math.floor(height), total_lights: Math.floor(totalLights) };
   if (record.score < 0) return;
   pendingLeaderboardRecord = record;
-  const qualifies = await runQualifiesForLeaderboard(record);
-  if (!pendingLeaderboardRecord) return;
-  if (qualifies && state.gameOver) {
+  if (!hasPilotName() && state.gameOver) {
     showPlayerNamePrompt();
     return;
   }
   pendingLeaderboardRecord = null;
-  submitLeaderboardScore(record.score, record.height, record.total_lights, getNextAnonymousName());
+  submitLeaderboardScore(record.score, record.height, record.total_lights, getPilotName());
 }
 
 function showPlayerNamePrompt(nextAction = null) {
@@ -1494,11 +1545,12 @@ function skipPlayerName() {
   playerNamePrompt.classList.add("hidden");
   playerNameInput.value = "";
   playerNameStatus.textContent = "";
+  const anonymousName = setPilotName(getNextAnonymousName());
   submitLeaderboardScore(
     record.score,
     record.height,
     record.total_lights,
-    getNextAnonymousName()
+    anonymousName
   );
   const nextAction = pendingPlayerNameAction;
   pendingPlayerNameAction = null;
@@ -1881,6 +1933,7 @@ function loadSavedRun() {
   const scaleX = state.width / savedWidth;
   const scaleY = state.height / savedHeight;
   state.cameraY = Math.max(0, savedRun.cameraY);
+  state.groundOffsetX = savedRun.groundOffsetX ?? 0;
   state.aircraft.x = clamp(savedRun.aircraftX * state.width, state.aircraft.radius, state.width - state.aircraft.radius);
   state.aircraft.y = clamp(savedRun.aircraftY * state.height, state.aircraft.radius * 1.35, state.height - state.aircraft.radius);
   state.aircraft.previousX = state.aircraft.x;
@@ -1959,6 +2012,7 @@ function buildSavedRun() {
     worldWidth: state.width,
     worldHeight: state.height,
     cameraY: state.cameraY,
+    groundOffsetX: state.groundOffsetX,
     aircraftX: state.aircraft.x / state.width,
     aircraftY: state.aircraft.y / state.height,
     aircraftVx: state.aircraft.vx,
@@ -1998,7 +2052,9 @@ function buildSavedRun() {
       color: collectible.color,
       driftX: collectible.driftX,
       driftY: collectible.driftY,
-      phase: collectible.phase
+      phase: collectible.phase,
+      attracted: Boolean(collectible.attracted),
+      attractionAge: Math.max(0, collectible.attractionAge ?? 0)
     }))
   };
 }
@@ -2032,6 +2088,7 @@ function isValidSavedRun(savedRun) {
 
   return isNumberInRange(savedRun.worldWidth, 200, 10_000) &&
     isNumberInRange(savedRun.worldHeight, 300, 10_000) &&
+    (savedRun.groundOffsetX === undefined || isNumberInRange(savedRun.groundOffsetX, -1_000_000_000, 1_000_000_000)) &&
     isNumberInRange(savedRun.aircraftVx, -5_000, 5_000) &&
     isNumberInRange(savedRun.aircraftVy, -5_000, 5_000) &&
     isNumberInRange(savedRun.aircraftTilt, -Math.PI * 4, Math.PI * 4) &&
@@ -2051,6 +2108,16 @@ function isValidSavedRun(savedRun) {
 
 function isNumberInRange(value, minimum, maximum) {
   return Number.isFinite(value) && value >= minimum && value <= maximum;
+}
+
+function isValidLeaderboardRecord(record) {
+  return typeof record?.player_name === "string" &&
+    normalizePilotName(record.player_name).length > 0 &&
+    normalizePilotName(record.player_name).length <= 18 &&
+    Number.isInteger(record.score) && record.score >= 0 && record.score <= 10_000_000_000 &&
+    Number.isInteger(record.height) && record.height >= 0 && record.height <= 1_000_000_000 &&
+    Number.isInteger(record.total_lights) && record.total_lights >= 0 && record.total_lights <= 1_000_000_000 &&
+    (record.run_id === undefined || (typeof record.run_id === "string" && record.run_id.length >= 1 && record.run_id.length <= 64));
 }
 
 function isValidSavedAsteroid(asteroid, worldWidth) {
@@ -2073,7 +2140,9 @@ function isValidSavedCollectible(collectible, worldWidth) {
     collectibleColors.includes(collectible.color) &&
     isNumberInRange(collectible.driftX, -2_000, 2_000) &&
     isNumberInRange(collectible.driftY, -2_000, 2_000) &&
-    isNumberInRange(collectible.phase, -1_000_000, 1_000_000);
+    isNumberInRange(collectible.phase, -1_000_000, 1_000_000) &&
+    (collectible.attracted === undefined || typeof collectible.attracted === "boolean") &&
+    (collectible.attractionAge === undefined || isNumberInRange(collectible.attractionAge, 0, 60));
 }
 
 function clearSavedRun() {
@@ -2086,6 +2155,7 @@ function clearSavedRun() {
 
 function clearAllProgress() {
   clearSavedRun();
+  clearPilotName();
   state.coinsCollected = 0;
   state.shopProfile = { ...defaultShopProfile, owned: [...defaultShopProfile.owned] };
   state.advancementProgress = { lifetimeLights: 0, survivedHits: 0, completed: [] };
@@ -2103,12 +2173,19 @@ function clearAllProgress() {
     window.localStorage?.removeItem("ascend-shop-profile");
     window.localStorage?.removeItem("ascend-advancements");
     window.localStorage?.removeItem("ascend-best-score");
+    window.localStorage?.removeItem("ascend-last-run-result");
   } catch {
     // Storage can be unavailable in private browsing or embedded game hosts.
   }
 }
 
 function createSaveCode() {
+  const pilotName = hasPilotName() ? getPilotName() : null;
+  const leaderboardBest = pilotName
+    ? bestScoresByUsername(loadLocalLeaderboard()).find(
+      (entry) => normalizePilotName(entry.player_name).toLocaleLowerCase() === pilotName.toLocaleLowerCase()
+    )
+    : null;
   const payload = {
     version: 2,
     nonce: randomCodeCharacters(14),
@@ -2116,7 +2193,16 @@ function createSaveCode() {
       bestAltitude: state.bestAltitude,
       bestScore: state.bestScore,
       lightBalance: state.coinsCollected,
-      pilotName: getPilotName(),
+      ...(pilotName ? { pilotName } : {}),
+      ...(leaderboardBest ? {
+        leaderboardBest: {
+          player_name: leaderboardBest.player_name,
+          score: leaderboardBest.score,
+          height: leaderboardBest.height,
+          total_lights: leaderboardBest.total_lights,
+          ...(leaderboardBest.run_id ? { run_id: leaderboardBest.run_id } : {})
+        }
+      } : {}),
       screenShakeEnabled: state.screenShakeEnabled,
       musicEnabled: state.musicEnabled,
       sfxEnabled: state.sfxEnabled,
@@ -2143,7 +2229,7 @@ function createSaveCode() {
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replaceAll("=", "");
-  return `ASC2-${encoded}`;
+  return encoded;
 }
 
 function checksumText(value) {
@@ -2166,10 +2252,8 @@ function randomCodeCharacters(length) {
 function decodeSaveCode(code) {
   try {
     const trimmedCode = code.trim();
-    if (!trimmedCode.startsWith("ASC2-")) {
-      return null;
-    }
-    const encoded = trimmedCode.slice(5).replaceAll("-", "+").replaceAll("_", "/");
+    const codeWithoutLegacyPrefix = trimmedCode.startsWith("ASC2-") ? trimmedCode.slice(5) : trimmedCode;
+    const encoded = codeWithoutLegacyPrefix.replaceAll("-", "+").replaceAll("_", "/");
     const padded = encoded.padEnd(Math.ceil(encoded.length / 4) * 4, "=");
     const savePackage = JSON.parse(atob(padded));
     const payloadText = JSON.stringify(savePackage?.payload);
@@ -2182,6 +2266,7 @@ function decodeSaveCode(code) {
       (payload.profile?.lightBalance !== undefined && (!Number.isInteger(payload.profile.lightBalance) || payload.profile.lightBalance < 0 || payload.profile.lightBalance > 1_000_000_000)) ||
       (payload.profile?.bestScore !== undefined && (!Number.isInteger(payload.profile.bestScore) || payload.profile.bestScore < 0 || payload.profile.bestScore > 10_000_000_000)) ||
       (payload.profile?.pilotName !== undefined && (typeof payload.profile.pilotName !== "string" || payload.profile.pilotName.length < 1 || payload.profile.pilotName.length > 18)) ||
+      (payload.profile?.leaderboardBest !== undefined && !isValidLeaderboardRecord(payload.profile.leaderboardBest)) ||
       typeof payload.profile?.screenShakeEnabled !== "boolean" ||
       (payload.profile?.musicEnabled !== undefined && typeof payload.profile.musicEnabled !== "boolean") ||
       (payload.profile?.sfxEnabled !== undefined && typeof payload.profile.sfxEnabled !== "boolean") ||
@@ -2211,6 +2296,16 @@ function loadGameFromCode() {
   saveLightBalance(state.coinsCollected);
   updateShopLightCount();
   if (savePackage.profile.pilotName) setPilotName(savePackage.profile.pilotName);
+  else clearPilotName();
+  if (savePackage.profile.leaderboardBest) {
+    storeLocalPersonalBest(savePackage.profile.leaderboardBest);
+  } else {
+    try {
+      window.localStorage?.removeItem("ascend-last-run-result");
+    } catch {
+      // The loaded save still has no associated personal-best row.
+    }
+  }
   state.screenShakeEnabled = savePackage.profile.screenShakeEnabled;
   state.musicEnabled = savePackage.profile.musicEnabled ?? true;
   state.sfxEnabled = savePackage.profile.sfxEnabled ?? true;

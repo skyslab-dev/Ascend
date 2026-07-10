@@ -329,7 +329,14 @@ assert.equal(
     { player_name: "B", score: 80 },
     { player_name: "Invalid", score: "not-a-score" }
   ]))`),
-  JSON.stringify([{ player_name: "A", score: 100 }, { player_name: "a", score: 90 }, { player_name: "B", score: 80 }])
+  JSON.stringify([{ player_name: "A", score: 100 }, { player_name: "B", score: 80 }])
+);
+assert.equal(
+  run(`JSON.stringify(uniqueTopScores([
+    { player_name: "Sky", score: 1200, height: 80, total_lights: 7, run_id: "older" },
+    { player_name: "sky", score: 1500, height: 90, total_lights: 9, run_id: "new-best" }
+  ]))`),
+  JSON.stringify([{ player_name: "Sky", score: 1500, height: 90, total_lights: 9, run_id: "new-best" }])
 );
 assert.equal(
   run(`mergeLeaderboardScores(
@@ -441,8 +448,9 @@ assert.equal(JSON.parse(storedValues.get("ascend-saved-run")).version, 2);
 run("showTitleMenu()");
 assert.equal(elements.titleContinue.classList.contains("hidden"), false);
 const portableCode = run("createSaveCode()");
-assert.ok(portableCode.startsWith("ASC2-"));
+assert.equal(portableCode.startsWith("ASC2-"), false);
 assert.equal(run(`decodeSaveCode(${JSON.stringify(portableCode)}).run.version`), 2);
+assert.equal(run(`decodeSaveCode(${JSON.stringify(`ASC2-${portableCode}`)}).run.version`), 2);
 const tamperedCode = portableCode.slice(0, 18) +
   (portableCode[18] === "A" ? "B" : "A") + portableCode.slice(19);
 assert.equal(run(`decodeSaveCode(${JSON.stringify(tamperedCode)})`), null);
@@ -471,7 +479,7 @@ assert.equal(state.animationFrameId, null);
 assert.equal(elements.sideMenu.classList.contains("open"), true);
 assert.equal(elements.menuToggle.classList.contains("menu-open"), true);
 run("showSaveCode()");
-assert.ok(elements.saveCodeOutput.value.startsWith("ASC2-"));
+assert.equal(elements.saveCodeOutput.value.startsWith("ASC2-"), false);
 assert.equal(elements.pauseMenuActions.classList.contains("hidden"), true);
 assert.equal(elements.pauseSavePanel.classList.contains("hidden"), false);
 run("showPauseMenuActions()");
@@ -926,6 +934,9 @@ state.collectibles = [{
 state.nextAsteroidY = 2900;
 state.nextLaneChallengeY = 3100;
 state.nextCollectibleY = 3000;
+state.groundOffsetX = -725;
+state.collectibles[0].attracted = true;
+state.collectibles[0].attractionAge = 0.35;
 const exactWorldCode = run("createSaveCode()");
 state.asteroids = [];
 state.collectibles = [];
@@ -939,6 +950,9 @@ assert.equal(state.collectibles[0].worldY, 2720);
 assert.equal(state.nextAsteroidY, 2900);
 assert.equal(state.nextLaneChallengeY, 3100);
 assert.equal(state.nextCollectibleY, 3000);
+assert.equal(state.groundOffsetX, -725);
+assert.equal(state.collectibles[0].attracted, true);
+assert.equal(state.collectibles[0].attractionAge, 0.35);
 run("returnToTitleScreen()");
 
 elements.loadCodeInput.value = portableCode;
@@ -1010,6 +1024,7 @@ run("checkAdvancements(false)");
 assert.equal(state.shopProfile.owned.includes("aircraft-diamond"), true);
 assert.equal(state.advancementProgress.completed.includes("million"), true);
 assert.equal(elements.shopAircraftDiamondName.textContent, "Diamond");
+storedValues.set("ascend-pilot-name", "OldPilot");
 run("startNewGame()");
 assert.equal(state.bestAltitude, 0);
 assert.equal(state.coinsCollected, 0);
@@ -1019,6 +1034,7 @@ assert.equal(storedValues.has("ascend-best-altitude"), false);
 assert.equal(storedValues.has("ascend-saved-run"), false);
 assert.equal(storedValues.has("ascend-light-balance"), false);
 assert.equal(storedValues.has("ascend-advancements"), false);
+assert.equal(storedValues.has("ascend-pilot-name"), false);
 assert.equal(JSON.stringify(state.advancementProgress), JSON.stringify({ lifetimeLights: 0, survivedHits: 0, completed: [] }));
 assert.equal(state.titleScreenVisible, false);
 
@@ -1038,13 +1054,24 @@ storedValues.delete("ascend-anonymous-sequence");
 assert.equal(run("getNextAnonymousName()"), "Pilot0");
 assert.equal(run("getNextAnonymousName()"), "Pilot1");
 storedValues.set("ascend-anonymous-sequence", "0");
-run("pendingLeaderboardRecord = { score: 42, height: 3, total_lights: 1 }");
-run("showPlayerNamePrompt()");
+state.gameOver = true;
+run("offerLeaderboardEntry(42, 3, 1)");
 assert.equal(elements.playerNameInput.value, "");
+assert.equal(elements.playerNamePrompt.classList.contains("hidden"), false);
 assert.equal(run("skipPlayerName()"), true);
 const anonymousScores = JSON.parse(storedValues.get("ascend-leaderboard"));
 assert.equal(anonymousScores.at(-1).player_name, "Pilot0");
 assert.equal(anonymousScores.at(-1).score, 42);
+assert.equal(storedValues.get("ascend-pilot-name"), "Pilot0");
 assert.equal(elements.playerNamePrompt.classList.contains("hidden"), true);
+run('submitLeaderboardScore(30, 8, 2, "pilot0")');
+assert.equal(JSON.parse(storedValues.get("ascend-leaderboard")).at(-1).score, 42);
+run('submitLeaderboardScore(70, 9, 3, "pilot0")');
+const improvedScores = JSON.parse(storedValues.get("ascend-leaderboard"));
+assert.equal(improvedScores.filter((entry) => entry.player_name.toLowerCase() === "pilot0").length, 1);
+assert.equal(improvedScores.at(-1).player_name, "Pilot0");
+assert.equal(improvedScores.at(-1).score, 70);
+assert.equal(run("decodeSaveCode(createSaveCode()).profile.pilotName"), "Pilot0");
+assert.equal(run("decodeSaveCode(createSaveCode()).profile.leaderboardBest.score"), 70);
 
 console.log("game tests passed");
