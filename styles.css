@@ -844,9 +844,14 @@ button:active {
 
 .side-menu.shop-open .shop-catalog {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
   justify-items: center;
   gap: clamp(0.45rem, 1.2vh, 0.75rem);
+}
+
+.shop-catalog > * {
+  min-width: 0;
 }
 
 .shop-balance {
@@ -1564,13 +1569,16 @@ button:active {
   }
 
   .side-menu.shop-open .shop-catalog {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     padding: 0 0.25rem max(0.8rem, env(safe-area-inset-bottom));
   }
 
   .shop-section,
   .shop-balance {
-    width: min(100%, calc(100vw - 3rem));
+    width: 100%;
+    max-width: calc(100vw - 3rem);
   }
 
   .shop-section-heading {
@@ -1599,6 +1607,29 @@ button:active {
     min-width: 2.55rem;
     gap: 0.35rem;
     padding: 0.35rem;
+  }
+
+  .side-menu.leaderboard-open:not(.shop-open) .pause-frame {
+    height: min(76dvh, calc(100dvh - 5.2rem));
+    padding: 0.8rem 1.1rem;
+  }
+
+  .side-menu:not(.shop-open) .pause-subpanel.leaderboard-panel {
+    min-height: 0;
+    max-height: 100%;
+  }
+
+  .leaderboard-carousel,
+  .leaderboard-list {
+    min-height: 0;
+  }
+
+  .leaderboard-list {
+    max-height: min(28dvh, 13rem);
+  }
+
+  .leaderboard-panel > button:last-child {
+    margin-top: 0.65rem;
   }
 
   .title-menu,
