@@ -32,7 +32,6 @@ const sfxSetting = document.getElementById("sfxSetting");
 const altitudeLabel = document.getElementById("altitude");
 const livesLabel = document.getElementById("lives");
 const startPanel = document.getElementById("startPanel");
-const startShopButton = document.getElementById("startShop");
 const gameOverPanel = document.getElementById("gameOverPanel");
 const restartButton = document.getElementById("restart");
 const centerRestartButton = document.getElementById("centerRestart");
@@ -129,6 +128,7 @@ const advancementPopupTitle = document.getElementById("advancementPopupTitle");
 const advancementPopupReward = document.getElementById("advancementPopupReward");
 const saveCodeOutput = document.getElementById("saveCodeOutput");
 const boostControl = document.getElementById("boostControl");
+const boostButton = document.getElementById("boostButton");
 const gameLightCounter = document.getElementById("gameLightCounter");
 
 const altitudeMarks = [
@@ -161,7 +161,7 @@ const validShopItemIds = [
 const validAircraftStyles = ["classic", "dart", "glider", "arrow", "comet", "wisp", "diamond", "halo", "prism"];
 const validTrailStyles = ["white", "blue", "pink", "purple", "aurora", "stardust", "stars", "hearts", "diamonds", "rings", "sparks", "petals"];
 const aircraftStats = {
-  classic: { flightSpeed: 350, turnSpeed: 2, collisionScale: 0.68, boostDuration: 1, boostRecharge: 20, boostSpeed: 600 },
+  classic: { flightSpeed: 350, turnSpeed: 2, collisionScale: 0.68, boostDuration: 1, boostRecharge: 20, boostSpeed: 620 },
   dart: { flightSpeed: 385, turnSpeed: 2.25, collisionScale: 0.52, boostDuration: 0.72, boostRecharge: 17, boostSpeed: 690 },
   glider: { flightSpeed: 315, turnSpeed: 2.55, collisionScale: 0.8, boostDuration: 1.4, boostRecharge: 25, boostSpeed: 535 },
   arrow: { flightSpeed: 370, turnSpeed: 2.7, collisionScale: 0.58, boostDuration: 1.25, boostRecharge: 23, boostSpeed: 640 },
@@ -3834,21 +3834,27 @@ function updateBoostDisplay() {
               : state.shopProfile.aircraft === "prism" ? 0.76 : 0.9;
   const meterWidth = clamp(state.aircraft.radius * tailHalfWidth * 2.35, 19, 46);
   boostControl.style.setProperty("--boost-charge", state.boostCharge);
+  boostButton.style.setProperty("--boost-charge", state.boostCharge);
   boostControl.style.setProperty("--boost-x", `${state.aircraft.x}px`);
   boostControl.style.setProperty("--boost-y", `${state.aircraft.y + state.aircraft.radius * 2.1}px`);
   boostControl.style.setProperty("--boost-width", `${Math.max(42, meterWidth + 20)}px`);
   boostControl.style.setProperty("--boost-meter-width", `${meterWidth}px`);
   boostControl.setAttribute("aria-label", `Boost ${percentage}% charged`);
+  boostButton.setAttribute("aria-label", `Hold to boost, ${percentage}% charged`);
   boostControl.setAttribute("aria-pressed", state.boostActive ? "true" : "false");
   boostControl.classList.remove("visible", "available", "active");
+  boostButton.classList.remove("visible", "available", "active");
   if (!state.titleScreenVisible && !state.gameOver && !state.shopScreenVisible) {
     boostControl.classList.add("visible");
+    boostButton.classList.add("visible");
   }
   if (state.launched && !state.gameOver && !state.paused) {
     boostControl.classList.add("available");
+    boostButton.classList.add("available");
   }
   if (state.boostActive) {
     boostControl.classList.add("active");
+    boostButton.classList.add("active");
   }
 }
 
@@ -4129,6 +4135,20 @@ boostControl.addEventListener("pointerup", (event) => {
   setBoostHeld(false);
 });
 boostControl.addEventListener("pointercancel", () => setBoostHeld(false));
+boostButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  ensureAudio();
+  boostButton.setPointerCapture(event.pointerId);
+  setBoostHeld(true);
+});
+boostButton.addEventListener("pointerup", (event) => {
+  event.preventDefault();
+  if (boostButton.hasPointerCapture(event.pointerId)) {
+    boostButton.releasePointerCapture(event.pointerId);
+  }
+  setBoostHeld(false);
+});
+boostButton.addEventListener("pointercancel", () => setBoostHeld(false));
 gameLightCounter.addEventListener("click", (event) => {
   event.preventDefault();
   openShopFromLightCounter();
@@ -4185,7 +4205,6 @@ window.addEventListener("keyup", (event) => {
 });
 window.addEventListener("blur", () => setBoostHeld(false));
 titleContinueButton.addEventListener("click", continueFromTitle);
-startShopButton.addEventListener("click", openLandedShop);
 titlePlayButton.addEventListener("click", () => showTitlePanel(titlePlayPanel));
 titleNewGameButton.addEventListener("click", startNewGame);
 titleLoadGameButton.addEventListener("click", openLoadGamePanel);

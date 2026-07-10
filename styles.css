@@ -15,7 +15,7 @@ body {
 
 button {
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0.38rem 0.48rem;
   color: #f8fbff;
   background: rgba(255, 255, 255, 0.14);
@@ -276,7 +276,7 @@ button:active {
   justify-content: space-between;
   gap: 0.8rem;
   padding: 0.45rem 0.55rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(248, 251, 255, 0.76);
   border-radius: 6px;
   background: rgba(20, 26, 42, 0.28);
   backdrop-filter: blur(5px);
@@ -304,10 +304,18 @@ button:active {
   .title-submenu {
     top: auto;
     right: 1.5rem;
-    bottom: max(3.2rem, 8vh);
+    bottom: max(8rem, 18dvh);
     left: 1.5rem;
     margin: auto;
     transform: none;
+  }
+
+  .title-menu {
+    gap: 0.32rem;
+  }
+
+  .title-menu button {
+    min-height: 2.05rem;
   }
 
   .title-submenu.leaderboard-panel {
@@ -341,7 +349,7 @@ button:active {
   padding: clamp(0.28rem, 1.2vw, 0.36rem) clamp(0.36rem, 1.6vw, 0.46rem);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 6px;
-  background: rgba(20, 26, 42, 0.18);
+  background: rgba(248, 251, 255, 0.14);
   backdrop-filter: blur(5px);
 }
 
@@ -1359,33 +1367,65 @@ button:active {
   display: none;
 }
 
-.start-shop {
-  position: absolute;
+.boost-button {
+  --boost-charge: 1;
+  position: fixed;
   bottom: max(0.6rem, env(safe-area-inset-bottom));
   left: max(0.6rem, env(safe-area-inset-left));
+  z-index: 12;
   width: clamp(1.75rem, 7vw, 2rem);
   height: clamp(1.75rem, 7vw, 2rem);
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 6px;
-  background: rgba(20, 26, 42, 0.38);
+  background: rgba(20, 26, 42, 0.18);
   backdrop-filter: blur(5px);
   display: grid;
   place-items: center;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: none;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.boost-button::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 5px;
+  background: rgba(221, 231, 245, 0.72);
+  transform: scaleY(var(--boost-charge));
+  transform-origin: center bottom;
+  transition: transform 80ms linear;
+}
+
+.boost-button.visible {
+  opacity: 0.92;
+}
+
+.boost-button.available {
   pointer-events: auto;
 }
 
-.start-shop span {
+.boost-button.active {
+  border-color: #f8fbff;
+}
+
+.boost-button span {
+  position: relative;
+  z-index: 1;
   display: block;
-  color: #f8fbff;
+  color: #25314b;
   font-size: clamp(0.9rem, 3.5vw, 1rem);
   line-height: 1;
+  text-shadow: 0 0 2px rgba(248, 251, 255, 0.9);
   pointer-events: none;
 }
 
 @media (max-height: 700px) and (max-aspect-ratio: 4 / 5) {
   .title-menu {
-    bottom: max(1.5rem, 4vh);
+    bottom: max(6.5rem, 16dvh);
     gap: 0.3rem;
   }
 

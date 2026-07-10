@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ascend</title>
-  <link rel="stylesheet" href="styles.css?v=20260709-4">
+  <link rel="stylesheet" href="styles.css?v=20260709-12">
 </head>
 <body>
   <main class="game-shell" id="gameShell" aria-label="Ascend game">
@@ -27,6 +27,9 @@
     <button class="boost-control" id="boostControl" type="button" aria-label="Boost fully charged" title="Boost">
       <span class="boost-fill" aria-hidden="true"></span>
       <span class="boost-symbol" aria-hidden="true">↑</span>
+    </button>
+    <button class="boost-button" id="boostButton" type="button" aria-label="Hold to boost" title="Hold to boost">
+      <span aria-hidden="true">↑</span>
     </button>
     <button class="game-light-counter" id="gameLightCounter" type="button" aria-label="Open shop">
       <span class="game-light-orb" aria-hidden="true"></span>
@@ -185,9 +188,6 @@
     </aside>
     <section class="start-panel" id="startPanel">
       <p>Drag the up button, then release.</p>
-      <button class="start-shop" id="startShop" type="button" aria-label="Shop" title="Shop">
-        <span aria-hidden="true">↑</span>
-      </button>
     </section>
     <section class="title-screen splash-active" id="titleScreen" aria-label="Ascend main menu">
       <canvas id="titleCanvas" aria-hidden="true"></canvas>
@@ -259,6 +259,6 @@
     </section>
   </main>
   <script src="leaderboard-config.js"></script>
-  <script src="game.js?v=20260709-4"></script>
+  <script src="game.js?v=20260709-12"></script>
 </body>
 </html>

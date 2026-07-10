@@ -183,7 +183,6 @@ const elements = {
   altitude: makeElement(),
   lives: makeElement(),
   startPanel: makeElement(),
-  startShop: makeElement(),
   gameOverPanel: makeElement(),
   restart: makeElement(),
   centerRestart: makeElement(),
@@ -225,7 +224,8 @@ const elements = {
   advancementPopupTitle: makeElement(),
   advancementPopupReward: makeElement(),
   saveCodeOutput: makeElement(),
-  boostControl: makeElement()
+  boostControl: makeElement(),
+  boostButton: makeElement()
 };
 
 let nextFrameId = 1;
@@ -347,11 +347,14 @@ assert.equal(state.titleScreenVisible, false);
 assert.equal(elements.splashScreen.classList.contains("hidden"), true);
 assert.equal(elements.boostControl.classList.contains("visible"), true);
 assert.equal(elements.boostControl.classList.contains("available"), false);
+assert.equal(elements.boostButton.classList.contains("visible"), true);
+assert.equal(elements.boostButton.classList.contains("available"), false);
 run("openLandedShop()");
 assert.equal(state.shopScreenVisible, true);
 assert.equal(state.titleScreenVisible, false);
 assert.equal(state.paused, true);
 assert.equal(elements.boostControl.classList.contains("visible"), false);
+assert.equal(elements.boostButton.classList.contains("visible"), false);
 assert.equal(elements.pauseHeading.textContent, "Shop");
 assert.equal(elements.sideMenu.classList.contains("open"), true);
 assert.equal(elements.sideMenu.classList.contains("shop-open"), true);
@@ -361,12 +364,14 @@ assert.equal(state.shopScreenVisible, false);
 assert.equal(state.titleScreenVisible, false);
 assert.equal(state.paused, false);
 assert.equal(elements.boostControl.classList.contains("visible"), true);
+assert.equal(elements.boostButton.classList.contains("visible"), true);
 assert.equal(elements.pauseHeading.textContent, "Paused");
 assert.equal(elements.sideMenu.classList.contains("open"), false);
 assert.equal(elements.sideMenu.classList.contains("shop-open"), false);
 run("returnToTitleScreen()");
 assert.equal(state.titleScreenVisible, true);
 assert.equal(elements.boostControl.classList.contains("visible"), false);
+assert.equal(elements.boostButton.classList.contains("visible"), false);
 assert.equal(elements.titleContinue.classList.contains("hidden"), false);
 run("openTitleSettings()");
 assert.equal(elements.titleMenu.classList.contains("hidden"), true);
@@ -485,6 +490,7 @@ run("setBoostHeld(false)");
 run("updateBoost(20)");
 assert.equal(state.boostCharge, 1);
 assert.equal(elements.boostControl.style.values["--boost-charge"], 1);
+assert.equal(elements.boostButton.style.values["--boost-charge"], 1);
 assert.equal(
   run("JSON.stringify(getBackgroundColors(100))"),
   JSON.stringify(["#7894ba", "#9187ba", "#c486b4", "#df91a6"])
@@ -1008,6 +1014,8 @@ assert.equal(state.lastFlightY, -1);
 assert.equal(state.pointerInside, false);
 assert.equal(elements.boostControl.classList.contains("visible"), true);
 assert.equal(elements.boostControl.classList.contains("available"), true);
+assert.equal(elements.boostButton.classList.contains("visible"), true);
+assert.equal(elements.boostButton.classList.contains("available"), true);
 
 storedValues.delete("ascend-anonymous-sequence");
 assert.equal(run("getNextAnonymousName()"), "Pilot0");
