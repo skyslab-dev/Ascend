@@ -3835,6 +3835,7 @@ function updateBoostDisplay() {
   const meterWidth = clamp(state.aircraft.radius * tailHalfWidth * 2.35, 19, 46);
   boostControl.style.setProperty("--boost-charge", state.boostCharge);
   boostButton.style.setProperty("--boost-charge", state.boostCharge);
+  boostButton.style.setProperty("--boost-empty", `${(1 - state.boostCharge) * 100}%`);
   boostControl.style.setProperty("--boost-x", `${state.aircraft.x}px`);
   boostControl.style.setProperty("--boost-y", `${state.aircraft.y + state.aircraft.radius * 2.1}px`);
   boostControl.style.setProperty("--boost-width", `${Math.max(42, meterWidth + 20)}px`);
@@ -3845,10 +3846,10 @@ function updateBoostDisplay() {
   boostControl.classList.remove("visible", "available", "active");
   boostButton.classList.remove("visible", "available", "active");
   if (!state.titleScreenVisible && !state.gameOver && !state.shopScreenVisible) {
-    boostControl.classList.add("visible");
     boostButton.classList.add("visible");
   }
   if (state.launched && !state.gameOver && !state.paused) {
+    boostControl.classList.add("visible");
     boostControl.classList.add("available");
     boostButton.classList.add("available");
   }

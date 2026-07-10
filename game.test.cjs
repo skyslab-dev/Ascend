@@ -311,6 +311,7 @@ assert.ok(run("aircraftStats.dart.turnSpeed") > run("aircraftStats.classic.turnS
 assert.ok(run("aircraftStats.dart.collisionScale") < run("aircraftStats.classic.collisionScale"));
 assert.ok(run("aircraftStats.dart.boostDuration") < run("aircraftStats.classic.boostDuration"));
 assert.ok(run("aircraftStats.dart.boostSpeed") > run("aircraftStats.classic.boostSpeed"));
+assert.equal(run("aircraftStats.classic.boostSpeed"), 620);
 assert.ok(run("aircraftStats.glider.flightSpeed") < run("aircraftStats.classic.flightSpeed"));
 assert.ok(run("aircraftStats.glider.turnSpeed") > run("aircraftStats.classic.turnSpeed"));
 assert.ok(run("aircraftStats.glider.boostDuration") > run("aircraftStats.classic.boostDuration"));
@@ -345,7 +346,7 @@ run("dismissSplashScreen()");
 assert.equal(state.splashVisible, false);
 assert.equal(state.titleScreenVisible, false);
 assert.equal(elements.splashScreen.classList.contains("hidden"), true);
-assert.equal(elements.boostControl.classList.contains("visible"), true);
+assert.equal(elements.boostControl.classList.contains("visible"), false);
 assert.equal(elements.boostControl.classList.contains("available"), false);
 assert.equal(elements.boostButton.classList.contains("visible"), true);
 assert.equal(elements.boostButton.classList.contains("available"), false);
@@ -363,7 +364,7 @@ run("closeLandedShop()");
 assert.equal(state.shopScreenVisible, false);
 assert.equal(state.titleScreenVisible, false);
 assert.equal(state.paused, false);
-assert.equal(elements.boostControl.classList.contains("visible"), true);
+assert.equal(elements.boostControl.classList.contains("visible"), false);
 assert.equal(elements.boostButton.classList.contains("visible"), true);
 assert.equal(elements.pauseHeading.textContent, "Paused");
 assert.equal(elements.sideMenu.classList.contains("open"), false);
@@ -491,6 +492,7 @@ run("updateBoost(20)");
 assert.equal(state.boostCharge, 1);
 assert.equal(elements.boostControl.style.values["--boost-charge"], 1);
 assert.equal(elements.boostButton.style.values["--boost-charge"], 1);
+assert.equal(elements.boostButton.style.values["--boost-empty"], "0%");
 assert.equal(
   run("JSON.stringify(getBackgroundColors(100))"),
   JSON.stringify(["#7894ba", "#9187ba", "#c486b4", "#df91a6"])
