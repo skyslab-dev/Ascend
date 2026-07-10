@@ -161,15 +161,15 @@ const validShopItemIds = [
 const validAircraftStyles = ["classic", "dart", "glider", "arrow", "comet", "wisp", "diamond", "halo", "prism"];
 const validTrailStyles = ["white", "blue", "pink", "purple", "aurora", "stardust", "stars", "hearts", "diamonds", "rings", "sparks", "petals"];
 const aircraftStats = {
-  classic: { flightSpeed: 350, turnSpeed: 2, collisionScale: 0.68, boostDuration: 1, boostRecharge: 20, boostSpeed: 620 },
-  dart: { flightSpeed: 385, turnSpeed: 2.25, collisionScale: 0.52, boostDuration: 0.72, boostRecharge: 17, boostSpeed: 690 },
-  glider: { flightSpeed: 315, turnSpeed: 2.55, collisionScale: 0.8, boostDuration: 1.4, boostRecharge: 25, boostSpeed: 535 },
-  arrow: { flightSpeed: 370, turnSpeed: 2.7, collisionScale: 0.58, boostDuration: 1.25, boostRecharge: 23, boostSpeed: 640 },
-  comet: { flightSpeed: 405, turnSpeed: 1.7, collisionScale: 0.64, boostDuration: 0.8, boostRecharge: 18, boostSpeed: 720 },
-  wisp: { flightSpeed: 335, turnSpeed: 2.35, collisionScale: 0.56, boostDuration: 1.55, boostRecharge: 28, boostSpeed: 560 },
-  diamond: { flightSpeed: 300, turnSpeed: 3.2, collisionScale: 0.54, boostDuration: 2.25, boostRecharge: 27, boostSpeed: 570 },
-  halo: { flightSpeed: 355, turnSpeed: 2.4, collisionScale: 0.62, boostDuration: 1.2, boostRecharge: 20, boostSpeed: 620 },
-  prism: { flightSpeed: 390, turnSpeed: 2.45, collisionScale: 0.6, boostDuration: 1.1, boostRecharge: 21, boostSpeed: 675 }
+  classic: { flightSpeed: 350, turnSpeed: 2, collisionScale: 0.64, boostDuration: 1, boostRecharge: 20, boostSpeed: 620 },
+  dart: { flightSpeed: 440, turnSpeed: 2.8, collisionScale: 0.58, boostDuration: 0.55, boostRecharge: 14, boostSpeed: 760 },
+  glider: { flightSpeed: 270, turnSpeed: 1.6, collisionScale: 0.67, boostDuration: 2, boostRecharge: 30, boostSpeed: 540 },
+  arrow: { flightSpeed: 400, turnSpeed: 3.2, collisionScale: 0.6, boostDuration: 1.3, boostRecharge: 22, boostSpeed: 680 },
+  comet: { flightSpeed: 470, turnSpeed: 1.2, collisionScale: 0.66, boostDuration: 0.65, boostRecharge: 16, boostSpeed: 850 },
+  wisp: { flightSpeed: 320, turnSpeed: 4, collisionScale: 0.57, boostDuration: 2, boostRecharge: 30, boostSpeed: 590 },
+  diamond: { flightSpeed: 280, turnSpeed: 4.6, collisionScale: 0.56, boostDuration: 3, boostRecharge: 32, boostSpeed: 620 },
+  halo: { flightSpeed: 360, turnSpeed: 2.6, collisionScale: 0.62, boostDuration: 1.7, boostRecharge: 20, boostSpeed: 660 },
+  prism: { flightSpeed: 420, turnSpeed: 3, collisionScale: 0.59, boostDuration: 1.35, boostRecharge: 20, boostSpeed: 730 }
 };
 const trailColors = {
   white: ["#ffffff", "rgba(255, 255, 255, 0.8)"],
