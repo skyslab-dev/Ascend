@@ -324,11 +324,26 @@ assert.ok(run("aircraftStats.diamond.turnSpeed") > run("Math.max(...Object.entri
 assert.ok(run("aircraftStats.diamond.boostDuration") > run("aircraftStats.wisp.boostDuration"));
 assert.equal(
   run(`JSON.stringify(uniqueTopScores([
-    { player_name: "A", altitude: 100 },
-    { player_name: "a", altitude: 90 },
-    { player_name: "B", altitude: 80 }
+    { player_name: "A", score: 100 },
+    { player_name: "a", score: 90 },
+    { player_name: "B", score: 80 },
+    { player_name: "Invalid", score: "not-a-score" }
   ]))`),
-  JSON.stringify([{ player_name: "A", altitude: 100 }, { player_name: "a", altitude: 90 }, { player_name: "B", altitude: 80 }])
+  JSON.stringify([{ player_name: "A", score: 100 }, { player_name: "a", score: 90 }, { player_name: "B", score: 80 }])
+);
+assert.equal(
+  run(`mergeLeaderboardScores(
+    [{ player_name: "Sky", score: 1200, height: 80, total_lights: 7, run_id: "same-run" }],
+    [{ player_name: "Sky", score: 1200, height: 80, total_lights: 7, run_id: "same-run" }]
+  ).length`),
+  1
+);
+assert.equal(
+  run(`mergeLeaderboardScores(
+    [{ player_name: "Sky", score: 1200, height: 80, total_lights: 7, run_id: "run-one" }],
+    [{ player_name: "Sky", score: 1200, height: 80, total_lights: 7, run_id: "run-two" }]
+  ).length`),
+  2
 );
 assert.equal(
   run("getShopItems().findIndex(item => item.id === 'aircraft-diamond')"),

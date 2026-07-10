@@ -185,6 +185,14 @@ const trailColors = {
   sparks: ["#ffffff", "rgba(255, 255, 255, 0.88)"],
   petals: ["#ffffff", "rgba(255, 255, 255, 0.88)"]
 };
+const cloudHorizonProfiles = [
+  [0.2, 0.62, 0.54, 1.04, 1.16, 0.68, 1.02, 0.88, 0.48, 0.72, 0.26],
+  [0.14, 0.42, 0.36, 0.76, 0.9, 0.54, 0.72, 0.64, 0.34, 0.5, 0.18],
+  [0.24, 0.76, 0.64, 1.22, 1.34, 0.76, 0.96, 0.82, 0.44, 0.66, 0.22],
+  [0.18, 0.52, 0.44, 0.88, 1, 0.62, 1.2, 1.08, 0.64, 0.86, 0.3],
+  [0.1, 0.34, 0.28, 0.64, 0.78, 0.46, 0.62, 0.54, 0.28, 0.44, 0.14],
+  [0.26, 0.68, 0.58, 0.94, 1.06, 0.64, 0.86, 0.74, 0.4, 0.78, 0.28]
+];
 const advancementDefinitions = [
   { id: "light-seeker", target: 100, metric: "lights", title: "Light Seeker", rewardId: "trail-aurora", rewardName: "Aurora trail", elementPrefix: "advancementLightSeeker" },
   { id: "skybound", target: 1000, metric: "altitude", title: "Skybound", rewardId: "aircraft-prism", rewardName: "Prism aircraft", elementPrefix: "advancementSkybound" },
@@ -1176,12 +1184,15 @@ function decodeFirestoreScore(document) {
   if (!fields) return null;
   const playerName = fields.player_name?.stringValue;
   if (typeof playerName !== "string") return null;
-  return {
+  const score = {
     player_name: playerName,
     score: Number(fields.score?.integerValue || 0),
     height: Number(fields.height?.integerValue || 0),
     total_lights: Number(fields.total_lights?.integerValue || 0)
   };
+  const runId = fields.run_id?.stringValue;
+  if (typeof runId === "string" && runId) score.run_id = runId;
+  return score;
 }
 
 function encodeFirestoreScore(record) {
@@ -1191,6 +1202,7 @@ function encodeFirestoreScore(record) {
       score: { integerValue: String(record.score) },
       height: { integerValue: String(record.height) },
       total_lights: { integerValue: String(record.total_lights) },
+      run_id: { stringValue: record.run_id },
       created_at: { timestampValue: new Date().toISOString() }
     }
   };
@@ -1250,8 +1262,37 @@ function getNextAnonymousName() {
 }
 
 function uniqueTopScores(scores, metricKey = "score") {
-  const sortedScores = [...scores].sort((a, b) => Number(b[metricKey]) - Number(a[metricKey]));
-  return sortedScores.filter((score) => String(score.player_name).trim()).slice(0, 10);
+  return [...scores]
+    .filter((entry) => {
+      const value = Number(entry?.[metricKey]);
+      return typeof entry?.player_name === "string" && entry.player_name.trim() && Number.isFinite(value) && value >= 0;
+    })
+    .sort((a, b) => Number(b[metricKey]) - Number(a[metricKey]))
+    .slice(0, 10);
+}
+
+function leaderboardRunIdentity(record) {
+  if (typeof record?.run_id === "string" && record.run_id) return `run:${record.run_id}`;
+  return [
+    "legacy",
+    normalizePilotName(String(record?.player_name ?? "")).toLocaleLowerCase(),
+    Math.floor(Number(record?.score) || 0),
+    Math.floor(Number(record?.height) || 0),
+    Math.floor(Number(record?.total_lights) || 0)
+  ].join(":");
+}
+
+function mergeLeaderboardScores(...scoreSets) {
+  const merged = [];
+  const seen = new Set();
+  for (const score of scoreSets.flat()) {
+    if (!score || typeof score.player_name !== "string") continue;
+    const identity = leaderboardRunIdentity(score);
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+    merged.push(score);
+  }
+  return merged;
 }
 
 function renderLeaderboard(list, scores, metric = leaderboardMetrics[leaderboardMetricIndex]) {
@@ -1302,15 +1343,16 @@ async function renderPreviousRun(element, metric, localScores, config) {
     element.textContent = "No completed run";
     return;
   }
-  let rank = 1 + localScores.filter((entry) => Number(entry[metric.key]) > Number(run[metric.key])).length;
+  let rankingScores = localScores;
   if (config) {
     try {
       const cloudScores = await fetchCloudScores(config, metric.key, 1000);
-      rank = 1 + cloudScores.filter((entry) => Number(entry[metric.key]) > Number(run[metric.key])).length;
+      rankingScores = mergeLeaderboardScores(cloudScores, localScores);
     } catch {
       // The local rank remains useful while cloud ranking is unavailable.
     }
   }
+  const rank = 1 + rankingScores.filter((entry) => Number(entry[metric.key]) > Number(run[metric.key])).length;
   element.classList.remove("empty");
   element.replaceChildren();
   const rankNode = document.createElement("strong");
@@ -1336,7 +1378,7 @@ async function loadLeaderboard(list, status, personal) {
   status.textContent = "Loading";
   try {
     const cloudScores = await fetchCloudScores(config, metric.key);
-    const scores = uniqueTopScores([...cloudScores, ...localScores], metric.key);
+    const scores = uniqueTopScores(mergeLeaderboardScores(cloudScores, localScores), metric.key);
     renderLeaderboard(list, scores, metric);
     await renderPreviousRun(personal, metric, localScores, config);
     status.textContent = "Top 10";
@@ -1353,8 +1395,14 @@ async function loadLeaderboard(list, status, personal) {
 async function submitLeaderboardScore(score, height, totalLights, playerName = getPilotName()) {
   const config = getLeaderboardConfig();
   const name = normalizePilotName(playerName);
-  const record = { player_name: name, score: Math.floor(score), height: Math.floor(height), total_lights: Math.floor(totalLights) };
-  if (!name || record.score < 0) return false;
+  const record = {
+    player_name: name,
+    score: Math.floor(score),
+    height: Math.floor(height),
+    total_lights: Math.floor(totalLights),
+    run_id: randomCodeCharacters(14)
+  };
+  if (!name || ![record.score, record.height, record.total_lights].every((value) => Number.isFinite(value) && value >= 0)) return false;
   const localScores = loadLocalLeaderboard();
   localScores.push(record);
   saveLocalLeaderboard(localScores);
@@ -1389,7 +1437,7 @@ async function runQualifiesForLeaderboard(record) {
       // Local scores still provide offline qualification.
     }
   }
-  const scores = [...cloudScores, ...localScores];
+  const scores = mergeLeaderboardScores(cloudScores, localScores);
   return leaderboardMetrics.some((metric) => {
     const top = uniqueTopScores(scores, metric.key);
     return top.length < 10 || Number(record[metric.key]) > Number(top[9][metric.key]);
@@ -3370,34 +3418,50 @@ function drawFloor() {
   }
 
   const horizontalOffset = state.groundOffsetX + state.viewOffsetX * 0.3;
-  ctx.save();
-  ctx.translate(horizontalOffset, 0);
-
-  const plainLeft = -state.width * 4;
-  const plainWidth = state.width * 9;
+  drawGroundBackdrop(baseY, horizontalOffset);
   const ground = ctx.createLinearGradient(0, baseY - 12, 0, state.height);
   ground.addColorStop(0, "rgba(22, 32, 55, 0.92)");
   ground.addColorStop(1, "rgba(12, 20, 38, 1)");
   ctx.fillStyle = ground;
-  ctx.beginPath();
-  ctx.moveTo(plainLeft, baseY);
-  const surfaceStep = Math.max(48, state.width * 0.07);
-  for (let x = plainLeft; x <= plainLeft + plainWidth; x += surfaceStep) {
-    const surfaceY = baseY + Math.sin(x * 0.018) * 3.2 + Math.sin(x * 0.0067) * 2.1;
-    ctx.lineTo(x, surfaceY);
-  }
-  ctx.lineTo(plainLeft + plainWidth, state.height * 2);
-  ctx.lineTo(plainLeft, state.height * 2);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillRect(-2, baseY, state.width + 4, state.height * 2);
 
   ctx.fillStyle = "rgba(57, 70, 98, 0.12)";
-  for (let x = plainLeft; x < plainLeft + plainWidth; x += 180) {
-    ctx.fillRect(x, baseY + 8 + Math.sin(x * 0.01) * 2, 56, 2);
-  }
-
-  ctx.restore();
+  ctx.fillRect(-2, baseY + 8, state.width + 4, 2);
   drawLaunchComplex(baseY, horizontalOffset);
+}
+
+function drawGroundBackdrop(baseY, horizontalOffset) {
+  const minimumCloudSpan = state.aircraft.radius * 40;
+  const nearCloudWidth = Math.max(640, minimumCloudSpan);
+  const farCloudWidth = Math.max(900, minimumCloudSpan * 1.4);
+
+  ctx.save();
+  drawCloudHorizonLayer(baseY - 10, farCloudWidth, 44, "rgba(230, 237, 255, 0.04)", horizontalOffset * 0.16, 2);
+  drawCloudHorizonLayer(baseY, nearCloudWidth, 70, "rgba(219, 229, 250, 0.1)", horizontalOffset * 0.38, 0);
+  ctx.restore();
+}
+
+function drawCloudHorizonLayer(baseY, width, height, color, offset, profileOffset) {
+  const firstTile = Math.floor((-width - offset) / width);
+  const lastTile = Math.ceil((state.width + width - offset) / width);
+
+  for (let tile = firstTile; tile <= lastTile; tile += 1) {
+    const x = tile * width + offset;
+    drawCloudHorizon(x, baseY, width, height, color, tile + profileOffset);
+  }
+}
+
+function drawCloudHorizon(x, baseY, width, height, color, profileIndex) {
+  const profile = cloudHorizonProfiles[((profileIndex % cloudHorizonProfiles.length) + cloudHorizonProfiles.length) % cloudHorizonProfiles.length];
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, baseY);
+  ctx.bezierCurveTo(x + width * 0.04, baseY - height * profile[0], x + width * 0.09, baseY - height * profile[1], x + width * 0.17, baseY - height * profile[2]);
+  ctx.bezierCurveTo(x + width * 0.23, baseY - height * profile[3], x + width * 0.39, baseY - height * profile[4], x + width * 0.47, baseY - height * profile[5]);
+  ctx.bezierCurveTo(x + width * 0.56, baseY - height * profile[6], x + width * 0.7, baseY - height * profile[7], x + width * 0.76, baseY - height * profile[8]);
+  ctx.bezierCurveTo(x + width * 0.86, baseY - height * profile[9], x + width * 0.94, baseY - height * profile[10], x + width, baseY);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function getFloorTopY(cameraY) {
