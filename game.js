@@ -33,7 +33,6 @@ const altitudeLabel = document.getElementById("altitude");
 const livesLabel = document.getElementById("lives");
 const startPanel = document.getElementById("startPanel");
 const gameOverPanel = document.getElementById("gameOverPanel");
-const restartButton = document.getElementById("restart");
 const centerRestartButton = document.getElementById("centerRestart");
 const returnToTitleButton = document.getElementById("returnToTitle");
 const finalAltitudeLabel = document.getElementById("finalAltitude");
@@ -1140,12 +1139,6 @@ function closeMenu(resume = true) {
     stopAnimationLoop();
     state.animationFrameId = requestAnimationFrame(loop);
   }
-}
-
-function restartFromMenu() {
-  closeMenu(false);
-  clearSavedRun();
-  resetRun();
 }
 
 function showPauseMenuActions() {
@@ -4282,7 +4275,6 @@ canvas.addEventListener("pointercancel", (event) => {
 menuToggleButton.addEventListener("click", togglePauseMenu);
 menuCloseButton.addEventListener("click", () => closeMenu());
 menuBackdrop.addEventListener("click", () => closeMenu());
-restartButton.addEventListener("click", restartFromMenu);
 pauseShopButton.addEventListener("click", openShopFromPause);
 pauseAdvancementsButton.addEventListener("click", showAdvancementsPanel);
 pauseLeaderboardButton.addEventListener("click", showPauseLeaderboard);

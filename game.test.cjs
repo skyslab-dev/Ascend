@@ -184,7 +184,6 @@ const elements = {
   lives: makeElement(),
   startPanel: makeElement(),
   gameOverPanel: makeElement(),
-  restart: makeElement(),
   centerRestart: makeElement(),
   returnToTitle: makeElement(),
   finalAltitude: makeElement(),

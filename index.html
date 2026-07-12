@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ascend</title>
-  <link rel="stylesheet" href="styles.css?v=20260709-17">
+  <link rel="stylesheet" href="styles.css?v=20260712-2">
 </head>
 <body>
   <main class="game-shell" id="gameShell" aria-label="Ascend game">
@@ -41,7 +41,6 @@
       <div class="pause-frame">
         <div class="pause-menu-actions" id="pauseMenuActions">
           <button id="menuClose" type="button">Resume</button>
-          <button id="restart" type="button">Restart</button>
           <button id="pauseShop" type="button">Shop</button>
           <button id="pauseAdvancements" type="button">Advancements</button>
           <button id="pauseLeaderboard" type="button">Leaderboard</button>
@@ -54,7 +53,7 @@
           <button id="pauseSaveBack" type="button">Back</button>
         </section>
         <section class="pause-subpanel advancements-panel hidden" id="pauseAdvancementsPanel" aria-label="Advancements">
-          <strong>Advancements</strong>
+          <div class="advancements-list">
           <article class="advancement-item" id="advancementLightSeeker"><strong>Light Seeker</strong><span>Collect 100 lifetime lights</span><small id="advancementLightSeekerReward">Aurora trail</small><div><i id="advancementLightSeekerFill"></i></div><em id="advancementLightSeekerProgress">0 / 100</em></article>
           <article class="advancement-item" id="advancementSkybound"><strong>Skybound</strong><span>Reach 1,000 km</span><small id="advancementSkyboundReward">Prism aircraft</small><div><i id="advancementSkyboundFill"></i></div><em id="advancementSkyboundProgress">0 / 1000</em></article>
           <article class="advancement-item" id="advancementResilient"><strong>Resilient</strong><span>Survive 20 asteroid hits</span><small id="advancementResilientReward">???</small><div><i id="advancementResilientFill"></i></div><em id="advancementResilientProgress">0 / 20</em></article>
@@ -66,6 +65,7 @@
           <article class="advancement-item" id="advancementDeepSpace"><strong>Deep Space</strong><span>Reach 100,000 km</span><small id="advancementDeepSpaceReward">Ring trail</small><div><i id="advancementDeepSpaceFill"></i></div><em id="advancementDeepSpaceProgress">0 / 100000</em></article>
           <article class="advancement-item" id="advancementUnshaken"><strong>Unshaken</strong><span>Survive 100 asteroid hits</span><small id="advancementUnshakenReward">???</small><div><i id="advancementUnshakenFill"></i></div><em id="advancementUnshakenProgress">0 / 100</em></article>
           <article class="advancement-item hidden" id="advancementMillion"><strong>Beyond Measure</strong><span>Reached 1,000,000 km</span><small id="advancementMillionReward">Diamond aircraft</small><div><i id="advancementMillionFill"></i></div><em id="advancementMillionProgress">1,000,000 / 1,000,000</em></article>
+          </div>
           <button id="pauseAdvancementsBack" type="button">Back</button>
         </section>
         <section class="pause-subpanel leaderboard-panel hidden" id="pauseLeaderboardPanel" aria-label="Cloud leaderboard">
@@ -245,11 +245,15 @@
         <span class="leaderboard-status" id="titleLeaderboardStatus" aria-live="polite"></span>
         <button id="titleLeaderboardBack" type="button">Back</button>
       </section>
-      <section class="title-submenu hidden" id="titleTutorialPanel" aria-label="Tutorial">
+      <section class="title-submenu tutorial-panel hidden" id="titleTutorialPanel" aria-label="Tutorial">
         <h2>Tutorial</h2>
-        <p>Guide the rocket with your pointer or finger.</p>
-        <p>Hold Space or the boost button for speed and protection.</p>
-        <p>Avoid asteroids and collect pastel lights.</p>
+        <div class="tutorial-list">
+          <article class="tutorial-step"><span aria-hidden="true">↑</span><div><strong>Launch</strong><p>Drag the arrow upward, then release.</p></div></article>
+          <article class="tutorial-step"><span aria-hidden="true">△</span><div><strong>Fly</strong><p>Move your pointer or finger to guide the plane.</p></div></article>
+          <article class="tutorial-step"><span aria-hidden="true">●●●</span><div><strong>Survive</strong><p>Avoid asteroids. Each impact removes one life.</p></div></article>
+          <article class="tutorial-step"><span aria-hidden="true">⇧</span><div><strong>Boost</strong><p>Hold the boost control or Space for speed and protection. Release it to recharge.</p></div></article>
+          <article class="tutorial-step"><span aria-hidden="true">✦</span><div><strong>Collect</strong><p>Gather colored lights and spend them on aircraft and trails.</p></div></article>
+        </div>
         <button id="titleTutorialBack" type="button">Back</button>
       </section>
       <section class="title-submenu hidden" id="titleCreditsPanel" aria-label="Credits">
@@ -260,6 +264,6 @@
     </section>
   </main>
   <script src="leaderboard-config.js"></script>
-  <script src="game.js?v=20260710-11"></script>
+  <script src="game.js?v=20260712-1"></script>
 </body>
 </html>
