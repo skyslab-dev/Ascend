@@ -123,6 +123,7 @@ const playerNameInput = document.getElementById("playerNameInput");
 const playerNameConfirm = document.getElementById("playerNameConfirm");
 const playerNameSkip = document.getElementById("playerNameSkip");
 const playerNameStatus = document.getElementById("playerNameStatus");
+const gameOverActions = document.getElementById("gameOverActions");
 const advancementPopup = document.getElementById("advancementPopup");
 const advancementPopupTitle = document.getElementById("advancementPopupTitle");
 const advancementPopupReward = document.getElementById("advancementPopupReward");
@@ -161,15 +162,15 @@ const validShopItemIds = [
 const validAircraftStyles = ["classic", "dart", "glider", "arrow", "comet", "wisp", "diamond", "halo", "prism"];
 const validTrailStyles = ["white", "blue", "pink", "purple", "aurora", "stardust", "stars", "hearts", "diamonds", "rings", "sparks", "petals"];
 const aircraftStats = {
-  classic: { flightSpeed: 350, turnSpeed: 2, collisionScale: 0.64, boostDuration: 1, boostRecharge: 20, boostSpeed: 620 },
-  dart: { flightSpeed: 440, turnSpeed: 2.8, collisionScale: 0.58, boostDuration: 0.55, boostRecharge: 14, boostSpeed: 760 },
-  glider: { flightSpeed: 270, turnSpeed: 1.6, collisionScale: 0.67, boostDuration: 2, boostRecharge: 30, boostSpeed: 540 },
-  arrow: { flightSpeed: 400, turnSpeed: 3.2, collisionScale: 0.6, boostDuration: 1.3, boostRecharge: 22, boostSpeed: 680 },
-  comet: { flightSpeed: 470, turnSpeed: 1.2, collisionScale: 0.66, boostDuration: 0.65, boostRecharge: 16, boostSpeed: 850 },
-  wisp: { flightSpeed: 320, turnSpeed: 4, collisionScale: 0.57, boostDuration: 2, boostRecharge: 30, boostSpeed: 590 },
-  diamond: { flightSpeed: 280, turnSpeed: 4.6, collisionScale: 0.56, boostDuration: 3, boostRecharge: 32, boostSpeed: 620 },
-  halo: { flightSpeed: 360, turnSpeed: 2.6, collisionScale: 0.62, boostDuration: 1.7, boostRecharge: 20, boostSpeed: 660 },
-  prism: { flightSpeed: 420, turnSpeed: 3, collisionScale: 0.59, boostDuration: 1.35, boostRecharge: 20, boostSpeed: 730 }
+  classic: { flightSpeed: 350, turnSpeed: 1.8, collisionScale: 0.64, boostDuration: 1, boostRecharge: 20, boostSpeed: 620 },
+  dart: { flightSpeed: 440, turnSpeed: 2.52, collisionScale: 0.58, boostDuration: 0.55, boostRecharge: 14, boostSpeed: 760 },
+  glider: { flightSpeed: 270, turnSpeed: 1.44, collisionScale: 0.67, boostDuration: 2, boostRecharge: 30, boostSpeed: 540 },
+  arrow: { flightSpeed: 400, turnSpeed: 2.88, collisionScale: 0.6, boostDuration: 1.3, boostRecharge: 22, boostSpeed: 680 },
+  comet: { flightSpeed: 470, turnSpeed: 1.08, collisionScale: 0.66, boostDuration: 0.65, boostRecharge: 16, boostSpeed: 850 },
+  wisp: { flightSpeed: 320, turnSpeed: 3.6, collisionScale: 0.57, boostDuration: 2, boostRecharge: 30, boostSpeed: 590 },
+  diamond: { flightSpeed: 280, turnSpeed: 4.14, collisionScale: 0.56, boostDuration: 3, boostRecharge: 32, boostSpeed: 620 },
+  halo: { flightSpeed: 360, turnSpeed: 2.34, collisionScale: 0.62, boostDuration: 1.7, boostRecharge: 20, boostSpeed: 660 },
+  prism: { flightSpeed: 420, turnSpeed: 2.7, collisionScale: 0.59, boostDuration: 1.35, boostRecharge: 20, boostSpeed: 730 }
 };
 const trailColors = {
   white: ["#ffffff", "rgba(255, 255, 255, 0.8)"],
@@ -1514,6 +1515,12 @@ function showPlayerNamePrompt(nextAction = null) {
   playerNameInput.value = "";
   playerNameStatus.textContent = "";
   playerNamePrompt.classList.remove("hidden");
+  gameOverActions.classList.add("hidden");
+  playerNameInput.focus?.();
+}
+
+function revealGameOverActions() {
+  gameOverActions.classList.remove("hidden");
 }
 
 function confirmPlayerName() {
@@ -1529,6 +1536,7 @@ function confirmPlayerName() {
     pendingLeaderboardRecord = null;
     submitLeaderboardScore(record.score, record.height, record.total_lights, name);
   }
+  revealGameOverActions();
   const nextAction = pendingPlayerNameAction;
   pendingPlayerNameAction = null;
   nextAction?.();
@@ -1552,6 +1560,7 @@ function skipPlayerName() {
     record.total_lights,
     anonymousName
   );
+  revealGameOverActions();
   const nextAction = pendingPlayerNameAction;
   pendingPlayerNameAction = null;
   nextAction?.();
@@ -2508,11 +2517,20 @@ function drawMilestones() {
 }
 
 function getDifficulty() {
-  return clamp(getAltitude() / 900, 0, 1);
+  return getDifficultyAtAltitude(getAltitude());
+}
+
+function getDifficultyAtAltitude(altitude) {
+  const progress = clamp((altitude - 100) / 1900, 0, 1);
+  return progress * progress * (3 - 2 * progress);
 }
 
 function getOpeningProgress() {
-  return clamp(getAltitude() / 100, 0, 1);
+  return getOpeningProgressAtAltitude(getAltitude());
+}
+
+function getOpeningProgressAtAltitude(altitude) {
+  return clamp(altitude / 500, 0, 1);
 }
 
 function spawnAsteroids(direction = { x: 0, y: -1 }) {
@@ -2529,9 +2547,10 @@ function spawnAsteroids(direction = { x: 0, y: -1 }) {
     if (challenge) {
       state.asteroids.push(challenge);
     }
+    const openingLaneSpace = (1 - openingProgress) * 240;
     state.nextLaneChallengeY += randomBetween(
-      440 - difficulty * 100,
-      580 - difficulty * 130
+      440 - difficulty * 100 + openingLaneSpace,
+      580 - difficulty * 130 + openingLaneSpace
     );
   }
 
@@ -3268,7 +3287,6 @@ function registerHit() {
 
   if (state.lives === 0) {
     clearSavedRun();
-    updateDeathSummary();
     setBoostHeld(false);
     startScreenShake(0.48, 9);
     state.launched = false;
@@ -3277,6 +3295,7 @@ function registerHit() {
     releaseActivePointer();
     gameOverPanel.classList.remove("hidden");
     startPanel.classList.add("hidden");
+    updateDeathSummary();
     render();
   }
 }
@@ -3298,6 +3317,7 @@ function updateDeathSummary() {
   } catch {
     // Score still remains available for this session.
   }
+  gameOverActions.classList.toggle("hidden", !hasPilotName());
   offerLeaderboardEntry(finalScore, finalAltitude, state.advancementProgress.lifetimeLights);
 }
 

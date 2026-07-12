@@ -799,35 +799,54 @@ button:active {
 
 .player-name-prompt {
   display: grid;
-  width: min(18rem, calc(100vw - 4rem));
-  margin: 0.45rem auto 0;
-  gap: 0.45rem;
-  padding: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: 6px;
-  background: rgba(20, 26, 42, 0.18);
-  backdrop-filter: blur(5px);
+  width: min(16rem, calc(100vw - 4rem));
+  margin: 0.65rem auto 0;
+  gap: 0.4rem;
   text-align: center;
 }
 
 .player-name-prompt.hidden { display: none; }
-.player-name-prompt > strong { font-size: 0.84rem; text-transform: uppercase; }
-.player-name-prompt > span,
 .player-name-prompt > small { color: rgba(248, 251, 255, 0.68); font-size: 0.6rem; }
-.player-name-prompt input {
-  display: block;
-  width: 100%;
+
+.player-name-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   min-height: 2.2rem;
-  border: 1px solid rgba(255,255,255,0.24);
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  padding: 0 0.6rem;
-  background: rgba(20,26,42,0.18);
+  background: rgba(20, 26, 42, 0.24);
   backdrop-filter: blur(5px);
-  color: #fff;
-  text-align: center;
+  color: rgba(248, 251, 255, 0.72);
+  font-size: 0.68rem;
+  font-weight: 700;
 }
+
+.player-name-field input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(248, 251, 255, 0.5);
+  border-radius: 0;
+  padding: 0 0.15rem;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .player-name-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
-.player-name-actions button { min-height: 2.1rem; }
+.player-name-actions button {
+  min-height: 1.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 26, 42, 0.2);
+  font-size: 0.64rem;
+}
 
 .shop-catalog {
   display: none;
@@ -1511,6 +1530,10 @@ button:active {
   width: min(12rem, 100%);
   gap: 0.45rem;
   margin-top: 0.65rem;
+}
+
+.game-over-actions.hidden {
+  display: none;
 }
 
 #centerRestart,

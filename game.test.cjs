@@ -220,6 +220,7 @@ const elements = {
   playerNameConfirm: makeElement(),
   playerNameSkip: makeElement(),
   playerNameStatus: makeElement(),
+  gameOverActions: makeElement(),
   advancementPopup: makeElement(),
   advancementPopupTitle: makeElement(),
   advancementPopupReward: makeElement(),
@@ -527,6 +528,12 @@ assert.notEqual(
 const lowDifficultySpacing = run("Array.from({ length: 100 }, () => getAsteroidSpacing(0))");
 const highDifficultySpacing = run("Array.from({ length: 100 }, () => getAsteroidSpacing(1))");
 const openingSpacing = run("Array.from({ length: 100 }, () => getAsteroidSpacing(0, 0))");
+assert.equal(run("getDifficultyAtAltitude(100)"), 0);
+assert.equal(run("getDifficultyAtAltitude(1050)"), 0.5);
+assert.equal(run("getDifficultyAtAltitude(2000)"), 1);
+assert.equal(run("getDifficultyAtAltitude(5000)"), 1);
+assert.equal(run("getOpeningProgressAtAltitude(100)"), 0.2);
+assert.equal(run("getOpeningProgressAtAltitude(500)"), 1);
 assert.ok(Math.min(...lowDifficultySpacing) >= 145);
 assert.ok(Math.max(...lowDifficultySpacing) <= 220);
 assert.ok(Math.min(...highDifficultySpacing) >= 125);
@@ -969,7 +976,7 @@ run('buyOrEquipShopItem("aircraft-glider")');
 assert.equal(state.coinsCollected, 20);
 assert.equal(state.shopProfile.aircraft, "glider");
 assert.equal(state.flightSpeed, 270);
-assert.equal(state.turnSpeed, 1.6);
+assert.equal(state.turnSpeed, 1.44);
 assert.equal(state.shopProfile.owned.includes("aircraft-glider"), true);
 assert.equal(storedValues.get("ascend-light-balance"), "20");
 run('buyOrEquipShopItem("trail-purple")');
@@ -1051,6 +1058,8 @@ assert.equal(elements.boostButton.classList.contains("visible"), true);
 assert.equal(elements.boostButton.classList.contains("available"), true);
 
 storedValues.delete("ascend-anonymous-sequence");
+storedValues.delete("ascend-leaderboard");
+storedValues.delete("ascend-last-run-result");
 assert.equal(run("getNextAnonymousName()"), "Pilot0");
 assert.equal(run("getNextAnonymousName()"), "Pilot1");
 storedValues.set("ascend-anonymous-sequence", "0");
@@ -1058,12 +1067,17 @@ state.gameOver = true;
 run("offerLeaderboardEntry(42, 3, 1)");
 assert.equal(elements.playerNameInput.value, "");
 assert.equal(elements.playerNamePrompt.classList.contains("hidden"), false);
+assert.equal(elements.gameOverActions.classList.contains("hidden"), true);
+assert.equal(run("confirmPlayerName()"), false);
+assert.equal(elements.playerNameStatus.textContent, "Enter a name");
+assert.equal(elements.playerNamePrompt.classList.contains("hidden"), false);
 assert.equal(run("skipPlayerName()"), true);
 const anonymousScores = JSON.parse(storedValues.get("ascend-leaderboard"));
 assert.equal(anonymousScores.at(-1).player_name, "Pilot0");
 assert.equal(anonymousScores.at(-1).score, 42);
 assert.equal(storedValues.get("ascend-pilot-name"), "Pilot0");
 assert.equal(elements.playerNamePrompt.classList.contains("hidden"), true);
+assert.equal(elements.gameOverActions.classList.contains("hidden"), false);
 run('submitLeaderboardScore(30, 8, 2, "pilot0")');
 assert.equal(JSON.parse(storedValues.get("ascend-leaderboard")).at(-1).score, 42);
 run('submitLeaderboardScore(70, 9, 3, "pilot0")');

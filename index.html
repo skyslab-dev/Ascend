@@ -166,16 +166,17 @@
         <strong class="final-altitude" id="finalAltitude">0</strong>
         <span class="personal-best">Personal best · <strong id="bestAltitude">0</strong></span>
         <section class="player-name-prompt hidden" id="playerNamePrompt" aria-label="Choose player name">
-          <strong>Top 10</strong>
-          <span>Enter a leaderboard name</span>
-          <input id="playerNameInput" maxlength="18" autocomplete="off" aria-label="Leaderboard name" placeholder="Your name">
+          <label class="player-name-field" for="playerNameInput">
+            <span>Name:</span>
+            <input id="playerNameInput" maxlength="18" autocomplete="off" aria-label="Leaderboard name">
+          </label>
           <div class="player-name-actions">
-            <button id="playerNameConfirm" type="button">Submit</button>
             <button id="playerNameSkip" type="button">Skip</button>
+            <button id="playerNameConfirm" type="button">Continue</button>
           </div>
           <small id="playerNameStatus" aria-live="polite"></small>
         </section>
-        <div class="game-over-actions">
+        <div class="game-over-actions" id="gameOverActions">
           <button id="centerRestart" type="button">Restart</button>
           <button id="returnToTitle" type="button">Main Menu</button>
         </div>
@@ -259,6 +260,6 @@
     </section>
   </main>
   <script src="leaderboard-config.js"></script>
-  <script src="game.js?v=20260710-9"></script>
+  <script src="game.js?v=20260710-11"></script>
 </body>
 </html>
