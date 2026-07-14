@@ -605,7 +605,7 @@ function drawTitleScreen() {
   const planeY = state.height * (landscapeMenuLayout ? 0.53 : 0.48);
   const planeRadius = clamp(Math.min(state.width, state.height) * 0.095, 36, 82);
   drawTitleClouds();
-  fadeTitleCloudLines(planeX, planeY, planeRadius);
+  fadeTitlePromptArea();
   drawTitleTrailParticles(planeX, planeY, planeRadius);
   drawTitlePlane(planeX, planeY, planeRadius);
 }
@@ -678,18 +678,6 @@ function drawTitleAsteroid(x, y, radius, rotation, filled) {
   titleCtx.fill();
   titleCtx.stroke();
   titleCtx.restore();
-}
-
-function traceTitleTrail(planeX, planeY, planeRadius) {
-  titleCtx.moveTo(planeX, planeY + planeRadius * 0.92);
-  titleCtx.bezierCurveTo(
-    planeX - state.width * 0.04,
-    planeY + state.height * 0.16,
-    planeX + state.width * 0.2,
-    state.height * 0.72,
-    planeX - state.width * 0.04,
-    state.height * 0.97
-  );
 }
 
 function drawTitleTrailParticles(planeX, planeY, planeRadius) {
@@ -825,110 +813,87 @@ function drawTitlePlane(x, y, radius) {
 
 function drawTitleClouds() {
   titleCtx.save();
-  const cloudTop = state.height * 0.68;
+  const cloudTop = state.height * 0.7;
   const haze = titleCtx.createLinearGradient(0, cloudTop, 0, state.height);
   haze.addColorStop(0, "rgba(223, 190, 222, 0)");
-  haze.addColorStop(0.55, "rgba(224, 188, 214, 0.08)");
-  haze.addColorStop(1, "rgba(211, 147, 176, 0.3)");
+  haze.addColorStop(0.58, "rgba(224, 188, 214, 0.06)");
+  haze.addColorStop(1, "rgba(211, 147, 176, 0.22)");
   titleCtx.fillStyle = haze;
   titleCtx.fillRect(0, cloudTop, state.width, state.height - cloudTop);
 
-  drawTitleLineCloud(state.width * 0.08, state.height * 0.82, state.width * 0.36, state.height * 0.2, 0.68, 0);
-  drawTitleLineCloud(state.width * 0.37, state.height * 0.87, state.width * 0.31, state.height * 0.17, 0.62, 1);
-  drawTitleLineCloud(state.width * 0.7, state.height * 0.86, state.width * 0.27, state.height * 0.16, 0.64, 2);
-  drawTitleLineCloud(state.width * 0.96, state.height * 0.81, state.width * 0.35, state.height * 0.21, 0.7, 3);
-  drawTitleLineCloud(state.width * 0.18, state.height * 1.01, state.width * 0.43, state.height * 0.17, 0.74, 4);
-  drawTitleLineCloud(state.width * 0.55, state.height * 1.01, state.width * 0.36, state.height * 0.15, 0.68, 5);
-  drawTitleLineCloud(state.width * 0.87, state.height * 1.0, state.width * 0.31, state.height * 0.16, 0.72, 6);
+  drawTitleCloudBankLayer(
+    state.height * 0.88,
+    Math.max(720, state.width * 1.55),
+    state.height * 0.09,
+    "rgba(236, 239, 252, 0.08)",
+    2,
+    -state.width * 0.12
+  );
+  drawTitleCloudBankLayer(
+    state.height * 0.96,
+    Math.max(620, state.width * 1.3),
+    state.height * 0.14,
+    "rgba(239, 232, 248, 0.15)",
+    0,
+    state.width * 0.08
+  );
+  drawTitleCloudBankLayer(
+    state.height * 1.04,
+    Math.max(540, state.width * 1.08),
+    state.height * 0.19,
+    "rgba(248, 231, 244, 0.24)",
+    4,
+    -state.width * 0.18
+  );
 
   titleCtx.restore();
 }
 
-function fadeTitleCloudLines(planeX, planeY, planeRadius) {
+function drawTitleCloudBankLayer(baseY, width, height, color, profileOffset, offset) {
+  const firstTile = Math.floor((-width - offset) / width);
+  const lastTile = Math.ceil((state.width + width - offset) / width);
+
+  for (let tile = firstTile; tile <= lastTile; tile += 1) {
+    drawTitleCloudBank(tile * width + offset, baseY, width, height, color, tile + profileOffset);
+  }
+}
+
+function drawTitleCloudBank(x, baseY, width, height, color, profileIndex) {
+  const profile = cloudHorizonProfiles[
+    ((profileIndex % cloudHorizonProfiles.length) + cloudHorizonProfiles.length) % cloudHorizonProfiles.length
+  ];
+  titleCtx.fillStyle = color;
+  titleCtx.beginPath();
+  titleCtx.moveTo(x, baseY);
+  titleCtx.bezierCurveTo(x + width * 0.04, baseY - height * profile[0], x + width * 0.09, baseY - height * profile[1], x + width * 0.17, baseY - height * profile[2]);
+  titleCtx.bezierCurveTo(x + width * 0.23, baseY - height * profile[3], x + width * 0.39, baseY - height * profile[4], x + width * 0.47, baseY - height * profile[5]);
+  titleCtx.bezierCurveTo(x + width * 0.56, baseY - height * profile[6], x + width * 0.7, baseY - height * profile[7], x + width * 0.76, baseY - height * profile[8]);
+  titleCtx.bezierCurveTo(x + width * 0.86, baseY - height * profile[9], x + width * 0.94, baseY - height * profile[10], x + width, baseY);
+  titleCtx.lineTo(x + width, state.height * 1.08);
+  titleCtx.lineTo(x, state.height * 1.08);
+  titleCtx.closePath();
+  titleCtx.fill();
+}
+
+function fadeTitlePromptArea() {
+  if (!state.splashVisible) return;
+
   titleCtx.save();
   titleCtx.globalCompositeOperation = "destination-out";
-  titleCtx.lineCap = "round";
-
-  const trailFadeWidths = [planeRadius * 1.65, planeRadius * 1.15, planeRadius * 0.78];
-  const trailFadeAlphas = [0.16, 0.28, 0.52];
-  for (let index = 0; index < trailFadeWidths.length; index += 1) {
-    titleCtx.beginPath();
-    traceTitleTrail(planeX, planeY, planeRadius);
-    titleCtx.lineWidth = trailFadeWidths[index];
-    titleCtx.strokeStyle = `rgba(0, 0, 0, ${trailFadeAlphas[index]})`;
-    titleCtx.stroke();
-  }
-
-  if (state.splashVisible) {
-    const promptX = state.width * 0.5;
-    const promptY = state.height - Math.max(28, state.height * 0.035);
-    const promptRadius = Math.max(state.width * 0.32, 150);
-    const promptFade = titleCtx.createRadialGradient(
-      promptX, promptY, 0,
-      promptX, promptY, promptRadius
-    );
-    promptFade.addColorStop(0, "rgba(0, 0, 0, 0.88)");
-    promptFade.addColorStop(0.42, "rgba(0, 0, 0, 0.62)");
-    promptFade.addColorStop(1, "rgba(0, 0, 0, 0)");
-    titleCtx.fillStyle = promptFade;
-    titleCtx.fillRect(0, state.height * 0.84, state.width, state.height * 0.16);
-  }
+  const promptX = state.width * 0.5;
+  const promptY = state.height - Math.max(28, state.height * 0.035);
+  const promptRadius = Math.max(state.width * 0.32, 150);
+  const promptFade = titleCtx.createRadialGradient(
+    promptX, promptY, 0,
+    promptX, promptY, promptRadius
+  );
+  promptFade.addColorStop(0, "rgba(0, 0, 0, 0.88)");
+  promptFade.addColorStop(0.42, "rgba(0, 0, 0, 0.62)");
+  promptFade.addColorStop(1, "rgba(0, 0, 0, 0)");
+  titleCtx.fillStyle = promptFade;
+  titleCtx.fillRect(0, state.height * 0.84, state.width, state.height * 0.16);
 
   titleCtx.restore();
-}
-
-function drawTitleLineCloud(x, y, width, height, opacity, variation) {
-  const left = x - width * 0.56;
-  const right = x + width * 0.56;
-  const shoulderLift = 0.44 + (variation % 3) * 0.04;
-  const crownLift = 0.76 + (variation % 2) * 0.08;
-
-  function traceContour() {
-    titleCtx.moveTo(left, y);
-    titleCtx.bezierCurveTo(
-      x - width * 0.58, y - height * 0.18,
-      x - width * 0.5, y - height * shoulderLift,
-      x - width * 0.35, y - height * 0.43
-    );
-    titleCtx.bezierCurveTo(
-      x - width * 0.3, y - height * 0.72,
-      x - width * 0.12, y - height * crownLift,
-      x, y - height * 0.66
-    );
-    titleCtx.bezierCurveTo(
-      x + width * 0.13, y - height * (0.88 - (variation % 3) * 0.04),
-      x + width * 0.34, y - height * 0.7,
-      x + width * 0.37, y - height * 0.45
-    );
-    titleCtx.bezierCurveTo(
-      x + width * 0.51, y - height * 0.42,
-      x + width * 0.59, y - height * 0.15,
-      right, y
-    );
-  }
-
-  const cloudFade = titleCtx.createLinearGradient(0, y - height, 0, y + height * 0.35);
-  cloudFade.addColorStop(0, `rgba(255, 247, 252, ${opacity * 0.14})`);
-  cloudFade.addColorStop(0.6, `rgba(244, 222, 239, ${opacity * 0.07})`);
-  cloudFade.addColorStop(1, "rgba(244, 222, 239, 0)");
-
-  titleCtx.beginPath();
-  traceContour();
-  titleCtx.lineTo(right, y + height * 0.42);
-  titleCtx.lineTo(left, y + height * 0.42);
-  titleCtx.closePath();
-  titleCtx.fillStyle = cloudFade;
-  titleCtx.fill();
-
-  titleCtx.beginPath();
-  traceContour();
-  titleCtx.strokeStyle = `rgba(255, 245, 251, ${opacity})`;
-  titleCtx.lineWidth = clamp(width * 0.018, 3, 8);
-  titleCtx.lineCap = "round";
-  titleCtx.lineJoin = "round";
-  titleCtx.shadowColor = "rgba(255, 238, 249, 0.3)";
-  titleCtx.shadowBlur = 4;
-  titleCtx.stroke();
 }
 
 function clamp(value, min, max) {
