@@ -858,13 +858,37 @@ button:active {
     width: 100%;
   }
 
+  .title-submenu.leaderboard-panel {
+    top: max(1rem, env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    left: max(1rem, env(safe-area-inset-left));
+    width: auto;
+    height: auto;
+    max-height: none;
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto;
+    align-content: stretch;
+    transform: none;
+  }
+
   .leaderboard-carousel {
+    height: 100%;
+    min-height: 0;
     grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+    align-items: stretch;
     gap: 0.35rem;
   }
 
   .leaderboard-arrow {
     width: 2rem !important;
+    align-self: center;
+  }
+
+  .leaderboard-list {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    align-content: start;
   }
 }
 
@@ -1681,13 +1705,13 @@ button:active {
     width: 100%;
     grid-template-columns: minmax(0, 1fr);
     align-content: start;
-    padding: 0 0.25rem max(0.8rem, env(safe-area-inset-bottom));
+    padding: 0 0 max(0.8rem, env(safe-area-inset-bottom));
   }
 
   .shop-section,
   .shop-balance {
     width: 100%;
-    max-width: calc(100vw - 3rem);
+    max-width: 100%;
   }
 
   .shop-section-heading {
@@ -1698,18 +1722,20 @@ button:active {
   .shop-grid {
     justify-content: flex-start;
     gap: 0.45rem;
-    padding-bottom: 0.45rem;
+    padding: 0.15rem 0.15rem 0.45rem;
+    scroll-padding-inline: 0.15rem;
   }
 
   .shop-item {
-    flex-basis: clamp(5.5rem, 28vw, 6.5rem);
+    flex-basis: calc((100% - 0.9rem) / 3);
     min-height: clamp(5.25rem, 16dvh, 6.5rem);
   }
 
   .trail-options {
-    justify-content: flex-start;
+    justify-content: safe center;
     gap: 0.55rem;
-    padding: 0.45rem 0;
+    padding: 0.45rem 0.15rem;
+    scroll-padding-inline: 0.15rem;
   }
 
   .trail-choice {
@@ -1719,7 +1745,8 @@ button:active {
   }
 
   .side-menu.leaderboard-open:not(.shop-open) .pause-frame {
-    height: min(76dvh, calc(100dvh - 5.2rem));
+    height: calc(100dvh - 4.5rem);
+    max-height: calc(100dvh - 4.5rem);
     padding: 0.8rem 1.1rem;
   }
 
@@ -1730,11 +1757,12 @@ button:active {
 
   .leaderboard-carousel,
   .leaderboard-list {
+    height: 100%;
     min-height: 0;
   }
 
   .leaderboard-list {
-    max-height: min(28dvh, 13rem);
+    max-height: none;
   }
 
   .leaderboard-panel > button:last-child {
